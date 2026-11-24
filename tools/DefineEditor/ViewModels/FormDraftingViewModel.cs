@@ -1,8 +1,9 @@
 using System.Collections.ObjectModel;
-using System.Text;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.AI;
+using Polhem.Chat;
 using Polhem.DefineEditor.Services;
 using Polhem.Definition.Drafting;
 using Polhem.Definition.Layouts;
@@ -14,8 +15,9 @@ namespace Polhem.DefineEditor.ViewModels;
 /// form as it stands (the FormLayout the import would write), its fields and the open questions.
 /// </summary>
 /// <remarks>
-/// The session raises its events on the thread that runs the turn. They are passed to the thread that created this
-/// view-model, so the collections the window binds to change only there.
+/// The session runs its own tool loop; what it reports is fed into <see cref="Conversation"/>, which the window's chat
+/// view shows. The session raises its events on the thread that runs the turn. They are passed to the thread that
+/// created this view-model, so the collections the window binds to change only there.
 /// </remarks>
 public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
 {
@@ -24,21 +26,10 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     private readonly string _definePath;
     private readonly Func<FormDraftResult, Task<bool>> _import;
     private readonly SynchronizationContext? _context;
+    private readonly DraftingChatFeed _feed;
     private CancellationTokenSource? _cancellation;
-    private readonly List<DraftActivityCard> _turnCards = [];
-    private DraftActivityCard? _activity;
     private DraftQuestionCard? _pendingQuestions;
-    private readonly StringBuilder _streamText = new();
-    private DraftChatEntry? _streaming;
-    private bool _redrawPending;
-    private readonly StringBuilder _reasoningText = new();
-    private FormDraftUsage? _turnUsage;
-
-    /// <summary>
-    /// How often a streaming reply is redrawn. Each redraw parses the Markdown again, so the pieces that arrive in
-    /// between are gathered rather than drawn one by one.
-    /// </summary>
-    internal static TimeSpan StreamRedrawInterval { get; set; } = TimeSpan.FromMilliseconds(80);
+    private FormDraftUsage _turnUsage = FormDraftUsage.None;
 
     /// <summary>Initializes a new instance of the <see cref="FormDraftingViewModel"/> class.</summary>
     /// <param name="session">The conversation; this view-model runs every turn of it.</param>
@@ -58,6 +49,7 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         _definePath = definePath;
         _import = import;
         _context = SynchronizationContext.Current;
+        _feed = new DraftingChatFeed(DescribeTool, Post, DraftingChatFeed.DefaultRedrawInterval);
         DocumentsLabel = documentsLabel;
         CredentialText = credentialText;
         _session.AssistantMessage += OnAssistantMessage;
@@ -78,8 +70,8 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     /// <summary>Gets which credential the requests use.</summary>
     public string CredentialText { get; }
 
-    /// <summary>Gets the messages of the conversation.</summary>
-    public ObservableCollection<DraftChatItem> Messages { get; } = [];
+    /// <summary>Gets the conversation, as the chat view shows it.</summary>
+    public ChatConversation Conversation => _feed.Conversation;
 
     /// <summary>Gets the fields of the draft, table by table.</summary>
     public ObservableCollection<DraftFieldRow> Fields { get; } = [];
@@ -87,13 +79,10 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     /// <summary>Gets the problems the draft still has.</summary>
     public ObservableCollection<DraftIssueRow> Issues { get; } = [];
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SendCommand))]
-    private string _inputText = string.Empty;
-
+    /// <summary>Gets whether a turn is in progress; the chat view shows its stop button meanwhile.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanEditFields), nameof(ShowReadyHint))]
-    [NotifyCanExecuteChangedFor(nameof(SendCommand), nameof(StopCommand), nameof(CreateCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -124,14 +113,6 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool _isPreviewViewMode;
 
-    /// <summary>Gets the time and tokens of the turn in progress, or of the last turn once it ended.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasUsage))]
-    private string _usageText = string.Empty;
-
-    /// <summary>Gets whether there is a turn to report the cost of.</summary>
-    public bool HasUsage => UsageText.Length > 0;
-
     /// <summary>Gets whether the preview could not be drawn.</summary>
     public bool HasPreviewError => PreviewError.Length > 0;
 
@@ -148,39 +129,27 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     /// <param name="documents">The documents, as <see cref="Polhem.Definition.Drafting.Documents.DocumentSource"/> read them.</param>
     public Task StartAsync(IReadOnlyList<AIContent> documents)
     {
-        Messages.Add(new DraftChatEntry(isUser: true, L("Drafting_SentDocuments", DocumentsLabel)));
         RefreshDraft();
-        return RunTurnAsync(token => _session.StartAsync(documents, token));
+        return RunTurnAsync(L("Drafting_SentDocuments", DocumentsLabel), token => _session.StartAsync(documents, token));
     }
 
-    [RelayCommand(CanExecute = nameof(CanSend))]
-    private Task SendAsync()
+    /// <summary>Sends what the user wrote, or the answers of a question card; nothing while a turn is in progress.</summary>
+    /// <param name="text">The message.</param>
+    public Task SendAsync(string text)
     {
-        var text = InputText.Trim();
-        InputText = string.Empty;
-        return SendTextAsync(text);
-    }
-
-    /// <summary>Sends the answers of a question card as the user's message.</summary>
-    private void SubmitAnswers(string text)
-    {
-        if (IsBusy || text.Trim().Length == 0) return;
-        _ = SendTextAsync(text);
-    }
-
-    private Task SendTextAsync(string text)
-    {
+        ArgumentNullException.ThrowIfNull(text);
+        text = text.Trim();
+        if (IsBusy || text.Length == 0) return Task.CompletedTask;
         // A reply of any kind answers the open questions; their cards stop taking answers.
-        foreach (var card in Messages.OfType<DraftQuestionCard>())
+        foreach (var card in Conversation.Entries.OfType<DraftQuestionCard>())
             card.Close();
-        Messages.Add(new DraftChatEntry(isUser: true, text));
-        return RunTurnAsync(token => _session.SendAsync(text, token));
+        return RunTurnAsync(text, token => _session.SendAsync(text, token));
     }
 
-    private bool CanSend() => !IsBusy && !string.IsNullOrWhiteSpace(InputText);
+    private void SubmitAnswers(string text) => _ = SendAsync(text);
 
-    [RelayCommand(CanExecute = nameof(IsBusy))]
-    private void Stop() => _cancellation?.Cancel();
+    /// <summary>Stops the turn in progress.</summary>
+    public void Stop() => _cancellation?.Cancel();
 
     [RelayCommand(CanExecute = nameof(CanCreate))]
     private async Task CreateAsync()
@@ -251,205 +220,112 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         _session.QuestionsAsked -= OnSessionQuestionsAsked;
     }
 
-    private async Task RunTurnAsync(Func<CancellationToken, Task> turn)
+    private async Task RunTurnAsync(string prompt, Func<CancellationToken, Task> turn)
     {
         using var cancellation = new CancellationTokenSource();
         _cancellation = cancellation;
+        _pendingQuestions = null;
+        _turnUsage = FormDraftUsage.None;
+        _feed.Begin(prompt);
         IsBusy = true;
-        var completed = false;
-        var clock = System.Diagnostics.Stopwatch.StartNew();
-        _turnUsage = null;
-        UsageText = DescribeProgress(null, clock.Elapsed);
-        using var ticking = new CancellationTokenSource();
-        _ = TickAsync(clock, ticking.Token);
         try
         {
             await turn(cancellation.Token);
-            completed = true;
+            // A turn that failed loses its questions: the session no longer holds them. They show last, where the user
+            // answers them.
+            _feed.Complete(_pendingQuestions is { } questions ? [questions] : []);
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
-            Messages.Add(new DraftChatEntry(isUser: false, L("Drafting_Stopped"), isError: true));
+            _feed.Stop(L("Drafting_Stopped"));
         }
         catch (Exception ex)
         {
-            // Boundary: a turn runs from a button of the window; an exception that escaped it would end the editor. The
+            // Boundary: a turn runs from the window's prompt box; an exception that escaped it would end the editor. The
             // session has already put the draft back as it was before the turn, so the user can simply try again.
-            Messages.Add(new DraftChatEntry(isUser: false,
-                DraftingChatClients.DescribeFailure(ex) ?? L("Drafting_TurnFailed", ex.Message), isError: true));
+            _feed.Fail(DraftingChatClients.DescribeFailure(ex) ?? L("Drafting_TurnFailed", ex.Message), ex);
         }
         finally
         {
             _cancellation = null;
-            // NOTE: the ticker is cancelled, not awaited. Awaiting it adds a real asynchronous hop at the end of every turn,
-            // so the caller resumes after the turn off the thread that created this view-model, and a session event it
-            // causes next (DraftChanged after a field edit) is then posted instead of handled at once.
-            ticking.Cancel();
-            UsageText = DescribeUsage(_session.LastTurnUsage, clock.Elapsed);
-            // The session's events were posted before the turn's task completed, so they have all been handled here.
-            EndTurn(completed);
+            _pendingQuestions = null;
             IsBusy = false;
             RefreshDraft();
         }
     }
 
-    /// <summary>
-    /// Closes the turn's activity cards, drops the ones that never showed a step, and shows the questions the model
-    /// asked, last, where the user answers them. A turn that failed loses its questions: the session no longer holds them.
-    /// </summary>
-    private void EndTurn(bool completed)
-    {
-        foreach (var card in _turnCards)
-        {
-            card.Finish(completed);
-            if (!card.HasSteps)
-                Messages.Remove(card);
-        }
-        _turnCards.Clear();
-        _activity = null;
-        // A reply still arriving when the turn ended belongs to no answer: the session has removed the turn.
-        if (_streaming is not null)
-            Messages.Remove(_streaming);
-        _streaming = null;
-        _streamText.Clear();
-        _reasoningText.Clear();
-        if (completed && _pendingQuestions is { } questions)
-            Messages.Add(questions);
-        _pendingQuestions = null;
-    }
-
     private void OnAssistantMessage(object? sender, AssistantMessageEventArgs e)
         => Post(() =>
         {
-            var text = e.Text.Trim();
-            if (_streaming is { } entry)
-                entry.Complete(text);
-            else
-                Messages.Add(new DraftChatEntry(isUser: false, text));
-            _streaming = null;
-            _streamText.Clear();
+            // A provider that streams nothing reports the whole reply only here.
+            if (!_replyStreamed) _feed.AppendReply(e.Text.Trim());
         });
 
     private void OnAssistantMessageDelta(object? sender, AssistantMessageDeltaEventArgs e)
         => Post(() =>
         {
-            _streamText.Append(e.Text);
-            if (_streaming is null)
-            {
-                // Leading whitespace opens no bubble: a reply that turns out to be only whitespace is never shown.
-                if (_streamText.ToString().Trim().Length == 0) return;
-                _streaming = DraftChatEntry.Streaming();
-                Messages.Add(_streaming);
-                ShowStreamText();
-                return;
-            }
-            RedrawSoon();
+            _replyStreamed = true;
+            _feed.AppendReply(e.Text);
         });
 
     private void OnReasoningDelta(object? sender, ReasoningDeltaEventArgs e)
         => Post(() =>
         {
-            // The pieces belong to the card the request started in, even after a reply has streamed in below it.
-            if (_activity is null) return;
-            var first = _reasoningText.Length == 0;
-            _reasoningText.Append(e.Text);
-            if (first)
-                _activity.ShowReasoning(_reasoningText.ToString());
-            else
-                RedrawSoon();
+            _reasoningStreamed = true;
+            _feed.AppendReasoning(e.Text);
         });
-
-    // Gathers the pieces that arrive within one redraw interval: each redraw lays the text out again, and a reply's
-    // Markdown is parsed again.
-    private void RedrawSoon()
-    {
-        if (_redrawPending) return;
-        _redrawPending = true;
-        _ = RedrawLaterAsync();
-    }
-
-    private async Task RedrawLaterAsync()
-    {
-        await Task.Delay(StreamRedrawInterval);
-        Post(() =>
-        {
-            _redrawPending = false;
-            ShowStreamText();
-            if (_reasoningText.Length > 0)
-                _activity?.ShowReasoning(_reasoningText.ToString());
-        });
-    }
-
-    private void ShowStreamText() => _streaming?.ShowPartial(_streamText.ToString().Trim());
 
     private void OnUsageChanged(object? sender, FormDraftUsageEventArgs e)
-        => Post(() => _turnUsage = e.Usage);
-
-    // Runs on the thread that started the turn, as the turn does, so the usage line changes there.
-    private async Task TickAsync(System.Diagnostics.Stopwatch clock, CancellationToken cancellationToken)
-    {
-        try
+        => Post(() =>
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(500, cancellationToken);
-                // The turn may have ended while the delay completed; its final line must stay.
-                if (cancellationToken.IsCancellationRequested) return;
-                UsageText = DescribeProgress(_turnUsage, clock.Elapsed);
-            }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // The turn ended; the caller writes the final usage.
-        }
-    }
+            var usage = e.Usage;
+            _feed.AddUsage(usage.InputTokens - _turnUsage.InputTokens, usage.OutputTokens - _turnUsage.OutputTokens,
+                usage.CachedInputTokens - _turnUsage.CachedInputTokens);
+            _turnUsage = usage;
+        });
 
-    /// <summary>The call in progress and the seconds so far, while a turn runs.</summary>
-    /// <param name="usage">What the turn has cost so far, or <see langword="null"/> before its first call.</param>
-    /// <param name="elapsed">The time since the turn began.</param>
-    /// <returns>The line.</returns>
-    public static string DescribeProgress(FormDraftUsage? usage, TimeSpan elapsed)
-        => L("Drafting_UsageRunning", Math.Max(usage?.Calls ?? 1, 1), (int)elapsed.TotalSeconds);
-
-    /// <summary>The calls, the tokens and the time a finished turn took, in one line.</summary>
-    /// <param name="usage">What the turn cost.</param>
-    /// <param name="elapsed">The time the turn took, as the window measured it.</param>
-    /// <returns>The line.</returns>
-    public static string DescribeUsage(FormDraftUsage usage, TimeSpan elapsed)
-    {
-        ArgumentNullException.ThrowIfNull(usage);
-        var seconds = (int)Math.Round(elapsed.TotalSeconds);
-        if (usage.InputTokens == 0 && usage.OutputTokens == 0)
-            return L("Drafting_UsageNoTokens", usage.Calls, seconds);
-        var input = usage.InputTokens.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
-        var output = usage.OutputTokens.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
-        return usage.CachedInputTokens == 0
-            ? L("Drafting_Usage", usage.Calls, input, output, seconds)
-            : L("Drafting_UsageCached", usage.Calls, input,
-                usage.CachedInputTokens.ToString("N0", System.Globalization.CultureInfo.InvariantCulture), output, seconds);
-    }
+    private bool _replyStreamed;
+    private bool _reasoningStreamed;
 
     private void OnSessionActivity(object? sender, DraftActivityEventArgs e)
         => Post(() =>
         {
-            // A response's reasoning is reported once the response has ended, after its reply streamed in below the
-            // card; it still belongs to the card the response started in.
-            if (e.Kind is DraftActivityKind.Thinking or DraftActivityKind.Reasoning)
-                _reasoningText.Clear();
-            if (e.Kind == DraftActivityKind.Reasoning && _activity is not null)
+            switch (e.Kind)
             {
-                _activity.Apply(e);
-                return;
+                case DraftActivityKind.Thinking:
+                    _replyStreamed = false;
+                    _reasoningStreamed = false;
+                    _feed.BeginRequest();
+                    break;
+                case DraftActivityKind.Reasoning:
+                    // The whole summary, once the response has ended; shown only when its pieces did not stream in.
+                    if (!_reasoningStreamed) _feed.AppendReasoning(e.Detail);
+                    break;
+                case DraftActivityKind.ToolStarted:
+                    _feed.StartTool(e.ToolName, e.Subject);
+                    break;
+                case DraftActivityKind.ToolCompleted:
+                    _feed.EndTool(refusal: null);
+                    break;
+                case DraftActivityKind.ToolRefused:
+                    _feed.EndTool(e.Detail);
+                    break;
             }
-            // A reply the model wrote between tool calls ends the card above it; the next steps start a new one below.
-            if (_activity is null || !ReferenceEquals(Messages.LastOrDefault(), _activity))
-            {
-                _activity = new DraftActivityCard();
-                _turnCards.Add(_activity);
-                Messages.Add(_activity);
-            }
-            _activity.Apply(e);
         });
+
+    /// <summary>
+    /// What a tool call does, such as "Setting up the field leave_type", from the tool's name and what it works on.
+    /// </summary>
+    /// <param name="toolName">The tool, such as <c>upsert_field</c>.</param>
+    /// <param name="subject">What it works on, such as a field name.</param>
+    public static string DescribeTool(string toolName, string subject)
+    {
+        var key = "DraftingStep_" + toolName;
+        var format = LocalizationService.Current[key];
+        return string.Equals(format, key, StringComparison.Ordinal)
+            ? L("DraftingStep_Other", toolName)
+            : string.Format(CultureInfo.InvariantCulture, format, subject);
+    }
 
     private void OnSessionQuestionsAsked(object? sender, DraftQuestionsEventArgs e)
         => Post(() => _pendingQuestions = new DraftQuestionCard(e.Questions, SubmitAnswers));

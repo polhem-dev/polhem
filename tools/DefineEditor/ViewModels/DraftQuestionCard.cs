@@ -1,7 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Text;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Polhem.Chat;
+using Polhem.DefineEditor.Services;
 using Polhem.Definition.Drafting;
 
 namespace Polhem.DefineEditor.ViewModels;
@@ -10,7 +11,8 @@ namespace Polhem.DefineEditor.ViewModels;
 /// The questions the model asked, with the answers to choose from. A single question is answered by clicking an option;
 /// several are answered together. The answers go back as an ordinary message, so typing a reply works as well.
 /// </summary>
-public sealed partial class DraftQuestionCard : DraftChatItem
+/// <remarks>An entry of the drafting conversation of the application's own, with its template in the drafting window.</remarks>
+public sealed partial class DraftQuestionCard : ChatEntry
 {
     private readonly Action<string> _submit;
 
@@ -36,15 +38,18 @@ public sealed partial class DraftQuestionCard : DraftChatItem
     public bool HasRecommendations => Questions.Any(q => q.Recommended is not null);
 
     /// <summary>Gets whether the card still takes answers: until they are sent, or the user replies some other way.</summary>
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SubmitCommand), nameof(UseRecommendationsCommand))]
-    private bool _isOpen = true;
-
-    partial void OnIsOpenChanged(bool value)
+    public bool IsOpen
     {
-        foreach (var question in Questions)
-            question.NotifyOpenChanged();
-    }
+        get;
+        private set
+        {
+            if (!SetProperty(ref field, value)) return;
+            SubmitCommand.NotifyCanExecuteChanged();
+            UseRecommendationsCommand.NotifyCanExecuteChanged();
+            foreach (var question in Questions)
+                question.NotifyOpenChanged();
+        }
+    } = true;
 
     /// <summary>Stops taking answers, because the user replied in the conversation instead.</summary>
     public void Close() => IsOpen = false;
@@ -96,4 +101,6 @@ public sealed partial class DraftQuestionCard : DraftChatItem
         }
         SubmitCommand.NotifyCanExecuteChanged();
     }
+
+    private static string L(string key) => LocalizationService.Current[key];
 }

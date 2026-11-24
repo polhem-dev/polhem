@@ -1,14 +1,13 @@
-using System.Collections.Specialized;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
-using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Polhem.Chat.Avalonia;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
@@ -40,8 +39,7 @@ public partial class FormDraftingWindow : Window
         };
         // Tunnelling, and with handled events too, so a field editor still takes its own click afterwards.
         PreviewSheet.AddHandler(PointerPressedEvent, OnPreviewPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
-        // Tunnelling, because a TextBox that accepts returns handles Enter itself.
-        InputBox.AddHandler(KeyDownEvent, OnInputKeyDown, RoutingStrategies.Tunnel);
+        ChatLanguage.Follow(Chat, "Drafting_InputWatermark");
     }
 
     /// <summary>Opens the window over <paramref name="owner"/>.</summary>
@@ -51,7 +49,6 @@ public partial class FormDraftingWindow : Window
         window._viewModel = viewModel;
         viewModel.DraftChanged += window.OnDraftChanged;
         viewModel.PropertyChanged += window.OnViewModelPropertyChanged;
-        viewModel.Messages.CollectionChanged += window.OnMessagesChanged;
         viewModel.RefreshPreview();
         window.Show(owner);
         return window;
@@ -64,7 +61,6 @@ public partial class FormDraftingWindow : Window
         {
             _viewModel.DraftChanged -= OnDraftChanged;
             _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
-            _viewModel.Messages.CollectionChanged -= OnMessagesChanged;
         }
         base.OnClosed(e);
     }
@@ -140,31 +136,19 @@ public partial class FormDraftingWindow : Window
         return index >= 0 && visible is not null && index < visible.Count ? visible[index].FieldName : null;
     }
 
-    private void OnMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        => Dispatcher.UIThread.Post(() => ChatScroller.ScrollToEnd(), DispatcherPriority.Background);
-
     private void OnFieldRowEditEnded(object? sender, DataGridRowEditEndedEventArgs e)
     {
         if (e.EditAction == DataGridEditAction.Commit && e.Row.DataContext is DraftFieldRow row)
             Dispatcher.UIThread.Post(() => _viewModel?.CommitFieldEdit(row));
     }
 
-    // Enter sends, as in a chat; Shift+Enter starts a new line.
-    private void OnInputKeyDown(object? sender, KeyEventArgs e)
+    private void OnPromptSubmitted(object? sender, PromptSubmittedEventArgs e)
     {
-        if (e.Key != Key.Enter || e.KeyModifiers.HasFlag(KeyModifiers.Shift) || _viewModel is null) return;
-        e.Handled = true;
-        if (_viewModel.SendCommand.CanExecute(null))
-            _viewModel.SendCommand.Execute(null);
+        if (_viewModel is null) return;
+        _ = _viewModel.SendAsync(e.Text);
     }
+
+    private void OnStopRequested(object? sender, EventArgs e) => _viewModel?.Stop();
 
     private void OnClose(object? sender, RoutedEventArgs e) => Close();
-
-    private async void OnCopyMessage(object? sender, RoutedEventArgs e)
-    {
-        if (sender is Control { DataContext: DraftChatEntry entry } && Clipboard is { } clipboard)
-        {
-            await clipboard.SetTextAsync(entry.Text);
-        }
-    }
 }

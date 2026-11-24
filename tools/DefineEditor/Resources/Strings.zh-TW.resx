@@ -542,9 +542,7 @@
   <data name="Drafting_Create" xml:space="preserve"><value>產生定義</value></data>
   <data name="Drafting_CreateTooltip" xml:space="preserve"><value>以匯入 Excel 活頁簿的方式匯入此表單：確認檔案、寫入，再升級資料庫</value></data>
   <data name="Drafting_ReadyHint" xml:space="preserve"><value>草稿已可產生定義。</value></data>
-  <data name="Drafting_Send" xml:space="preserve"><value>送出</value></data>
   <data name="Drafting_Copy" xml:space="preserve"><value>複製</value></data>
-  <data name="Drafting_Stop" xml:space="preserve"><value>停止</value></data>
   <data name="Drafting_InputWatermark" xml:space="preserve"><value>回答 Claude 的問題或要求修改。Enter 送出；Shift+Enter 換行。</value></data>
   <data name="Drafting_TabForm" xml:space="preserve"><value>畫面</value></data>
   <data name="Drafting_TabFields" xml:space="preserve"><value>欄位</value></data>
@@ -561,10 +559,6 @@
   <data name="Drafting_ColumnRelation" xml:space="preserve"><value>關聯</value></data>
   <data name="Drafting_ColumnSource" xml:space="preserve"><value>文件原文</value></data>
   <data name="Drafting_SentDocuments" xml:space="preserve"><value>已送出 {0}。</value></data>
-  <data name="Drafting_UsageRunning" xml:space="preserve"><value>第 {0} 次呼叫・已 {1} 秒</value></data>
-  <data name="Drafting_Usage" xml:space="preserve"><value>呼叫 {0} 次・輸入 {1} tokens・輸出 {2} tokens・{3} 秒</value></data>
-  <data name="Drafting_UsageCached" xml:space="preserve"><value>呼叫 {0} 次・輸入 {1} tokens（快取 {2}）・輸出 {3} tokens・{4} 秒</value></data>
-  <data name="Drafting_UsageNoTokens" xml:space="preserve"><value>呼叫 {0} 次・未提供 token 用量・{1} 秒</value></data>
   <data name="Drafting_Stopped" xml:space="preserve"><value>已停止。草稿維持在這則訊息之前的狀態。</value></data>
   <data name="Drafting_TurnFailed" xml:space="preserve"><value>要求失敗：{0}
 草稿維持在這則訊息之前的狀態，可重送訊息再試一次。</value></data>
@@ -575,12 +569,6 @@
   <data name="Drafting_SendAnswers" xml:space="preserve"><value>送出回答</value></data>
   <data name="Drafting_AnswersHeader" xml:space="preserve"><value>我的回答：</value></data>
   <data name="Drafting_NotAnswered" xml:space="preserve"><value>（未回答）</value></data>
-  <data name="DraftingStep_Thinking" xml:space="preserve"><value>正在思考</value></data>
-  <data name="DraftingStep_Reasoning" xml:space="preserve"><value>思考</value></data>
-  <data name="DraftingStep_Done" xml:space="preserve"><value>已完成 {0} 個步驟</value></data>
-  <data name="DraftingStep_Stopped" xml:space="preserve"><value>已中止（完成 {0} 個步驟）</value></data>
-  <data name="DraftingStep_DoneOne" xml:space="preserve"><value>已完成 1 個步驟</value></data>
-  <data name="DraftingStep_StoppedOne" xml:space="preserve"><value>已中止（完成 1 個步驟）</value></data>
   <data name="DraftingStep_Other" xml:space="preserve"><value>正在執行 {0}</value></data>
   <data name="DraftingStep_set_form_info" xml:space="preserve"><value>設定表單名稱與選單</value></data>
   <data name="DraftingStep_upsert_table" xml:space="preserve"><value>設定資料表 {0}</value></data>
@@ -599,14 +587,11 @@
   <data name="RuleAssistant_Sends" xml:space="preserve"><value>您的描述，以及表單的欄位名稱、標題與清單值，會送給 Claude。憑證：{0}。</value></data>
   <data name="RuleAssistant_NoCredential" xml:space="preserve"><value>用白話撰寫規則需要使用 Claude，但這台電腦上找不到任何憑證。請以 ant auth login 登入，或設定環境變數 ANTHROPIC_API_KEY，再重新開啟這個編輯器。</value></data>
   <data name="RuleAssistant_RequestWatermark" xml:space="preserve"><value>用自己的話描述規則，例如：訂單金額超過 10 萬要有核准人</value></data>
-  <data name="RuleAssistant_Draft" xml:space="preserve"><value>產生規則</value></data>
-  <data name="RuleAssistant_DraftTip" xml:space="preserve"><value>重新開始，依您的描述產生規則。</value></data>
-  <data name="RuleAssistant_Revise" xml:space="preserve"><value>修改</value></data>
-  <data name="RuleAssistant_ReviseTip" xml:space="preserve"><value>依您輸入的內容修改上一條規則，或回答助手的提問。</value></data>
   <data name="RuleAssistant_Explain" xml:space="preserve"><value>說明這條規則</value></data>
   <data name="RuleAssistant_ExplainTip" xml:space="preserve"><value>說明編輯器中目前的規則，並附上測試資料。</value></data>
-  <data name="RuleAssistant_Stop" xml:space="preserve"><value>停止</value></data>
-  <data name="RuleAssistant_Stopped" xml:space="preserve"><value>已停止。</value></data>
+  <data name="RuleAssistant_ExplainPrompt" xml:space="preserve"><value>說明目前的規則。</value></data>
+  <data name="RuleAssistant_NewConversation" xml:space="preserve"><value>新對話</value></data>
+  <data name="RuleAssistant_NewConversationTip" xml:space="preserve"><value>重新開始：下一則訊息會要求一條新規則</value></data>
   <data name="RuleAssistant_Failed" xml:space="preserve"><value>要求失敗：{0}</value></data>
   <data name="RuleAssistant_Samples" xml:space="preserve"><value>測試資料（由運算式引擎實算）</value></data>
   <data name="RuleAssistant_Passes" xml:space="preserve"><value>通過</value></data>
@@ -623,11 +608,6 @@
   <data name="Status_RuleMessagesWritten" xml:space="preserve"><value>規則 {0}：翻譯已寫入 {1}。</value></data>
   <data name="Status_RuleMessagesProblems" xml:space="preserve"><value>規則 {0}：{1}</value></data>
   <data name="RuleAssistant_NoResult" xml:space="preserve"><value>助手沒有完成。請重新描述規則，或再試一次。</value></data>
-  <data name="RuleAssistant_ProgressCalling" xml:space="preserve"><value>等待模型回應（第 {0} 次呼叫）・已 {1} 秒</value></data>
-  <data name="RuleAssistant_ProgressChecking" xml:space="preserve"><value>檢查提交的規則（第 {0} 次呼叫後）・已 {1} 秒</value></data>
-  <data name="RuleAssistant_Usage" xml:space="preserve"><value>呼叫 {0} 次・輸入 {1} tokens・輸出 {2} tokens・{3} 秒</value></data>
-  <data name="RuleAssistant_UsageNoTokens" xml:space="preserve"><value>呼叫 {0} 次・未提供 token 用量・{1} 秒</value></data>
-  <data name="RuleAssistant_UsageNoCalls" xml:space="preserve"><value>沒有呼叫模型・{0} 秒</value></data>
   <data name="RuleAssistant_AllBlank" xml:space="preserve"><value>（所有欄位空白）</value></data>
   <data name="RuleDialog_AddTitle" xml:space="preserve"><value>新增規則</value></data>
   <data name="RuleDialog_EditTitle" xml:space="preserve"><value>規則 {0}</value></data>
