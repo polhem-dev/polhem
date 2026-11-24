@@ -3,9 +3,17 @@
              x:Class="Polhem.DefineEditor.App"
              xmlns:local="using:Polhem.DefineEditor"
              xmlns:conv="using:Polhem.DefineEditor.Converters"
+             xmlns:chat="using:Polhem.Chat"
+             xmlns:chatui="using:Polhem.Chat.Avalonia"
              RequestedThemeVariant="Light">
 
     <Application.DataTemplates>
+        <!-- The line that ends a turn of the assistants' conversations, with the cached tokens the chat view's own
+             summary leaves out. The chat views find it here. -->
+        <DataTemplate DataType="chat:TurnSummaryEntry">
+            <TextBlock Classes="polhemChatSummary" FontSize="12" Opacity="0.6" TextWrapping="Wrap"
+                       Text="{Binding Converter={x:Static conv:TurnSummaryConverter.Instance}}"/>
+        </DataTemplate>
         <local:ViewLocator/>
     </Application.DataTemplates>
 
@@ -22,6 +30,8 @@
     <Application.Styles>
         <StyleInclude Source="avares://Semi.Avalonia/Index.axaml"/>
         <StyleInclude Source="avares://Semi.Avalonia.DataGrid/Index.axaml"/>
+        <!-- After the base theme, as the chat views need. -->
+        <chatui:ChatTheme/>
         <StyleInclude Source="/Styles/DocumentStyles.axaml"/>
     </Application.Styles>
 </Application>

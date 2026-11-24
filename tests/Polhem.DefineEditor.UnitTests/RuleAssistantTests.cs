@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Microsoft.Extensions.AI;
 using Polhem.Core.Data;
 using Polhem.Core.Serialization;
+using Polhem.Chat;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.Definition.Drafting.Rules;
@@ -146,13 +147,12 @@ public sealed class RuleAssistantTests : IDisposable
         var applied = 0;
         assistant.Applied += (_, _) => applied++;
 
-        assistant.Request = "金額超過 10 萬要有核准人";
-        await assistant.DraftCommand.ExecuteAsync(null);
+        await assistant.SendAsync("金額超過 10 萬要有核准人");
 
         Assert.True(assistant.HasDraft);
-        Assert.Empty(assistant.Reply);
-        Assert.StartsWith(RuleAssistantViewModel.DescribeUsage(new RuleDraftingUsage(1, 0, 0, TimeSpan.Zero), TimeSpan.Zero)[..4],
-            assistant.UsageText, StringComparison.Ordinal);
+        Assert.Equal("金額超過 10 萬要有核准人", Assert.IsType<UserPromptEntry>(assistant.Conversation.Entries[0]).Text);
+        Assert.Equal(TurnOutcome.Completed, Assert.IsType<TurnSummaryEntry>(assistant.Conversation.Entries[^1]).Outcome);
+        Assert.Empty(assistant.UsageText);
         Assert.Equal([RuleSampleOutcome.Blocked, RuleSampleOutcome.Passes, RuleSampleOutcome.Skipped],
             assistant.Samples.Select(s => s.Outcome));
         Assert.Contains("amount = 200000", assistant.Samples[0].Values, StringComparison.Ordinal);
@@ -189,8 +189,7 @@ public sealed class RuleAssistantTests : IDisposable
             .Then(Text("好了。"));
         var (_, assistant) = Open(Load(client));
 
-        assistant.Request = "金額超過 10 萬要有核准人";
-        await assistant.DraftCommand.ExecuteAsync(null);
+        await assistant.SendAsync("金額超過 10 萬要有核准人");
 
         Assert.True(assistant.HasDraft);
     }
@@ -206,6 +205,8 @@ public sealed class RuleAssistantTests : IDisposable
         await assistant.ExplainCommand.ExecuteAsync(null);
 
         Assert.Contains("condition: !IsBlank(approver_id)", client.Requests[0].Messages[^1].Text, StringComparison.Ordinal);
+        Assert.Equal(LocalizationService.Current["RuleAssistant_ExplainPrompt"],
+            Assert.IsType<UserPromptEntry>(assistant.Conversation.Entries[0]).Text);
         Assert.Equal("核准人一定要填。", assistant.Explanation);
         Assert.Equal(2, assistant.Samples.Count);
         Assert.False(assistant.HasDraft);
@@ -213,72 +214,49 @@ public sealed class RuleAssistantTests : IDisposable
     }
 
     [Fact]
-    [DisplayName("While a request runs the reasoning and the reply show as they arrive, and an accepted rule replaces them with the result")]
+    [DisplayName("The streamed reasoning and reply show in the conversation, and an accepted rule shows its result as well")]
     public async Task Draft_Streamed_ShowsReasoningAndReplyThenTheResult()
     {
         var client = new ScriptedChatClient { TextPieceLength = 4 }
             .Then(new TextReasoningContent("The amount field decides it."), Text("我來寫這條規則。"), Call("c1", "submit_rule", Draft));
         var (_, assistant) = Open(Load(client));
-        var seen = new List<(string Thinking, string Reply)>();
-        client.AfterUpdate = _ =>
-        {
-            assistant.ShowStreamed();
-            seen.Add((assistant.ThinkingText, assistant.Reply));
-        };
 
-        assistant.Request = "金額超過 10 萬要有核准人";
-        await assistant.DraftCommand.ExecuteAsync(null);
+        await assistant.SendAsync("金額超過 10 萬要有核准人");
 
-        Assert.Contains(seen, s => s.Thinking == "The" && s.Reply.Length == 0);
-        Assert.Contains(seen, s => s.Thinking == "The amount field decides it." && s.Reply == "我來寫這條規則。");
+        var entries = assistant.Conversation.Entries;
+        Assert.Equal("The amount field decides it.", Assert.Single(entries.OfType<ReasoningEntry>()).Text);
+        Assert.Equal("我來寫這條規則。", Assert.Single(entries.OfType<AssistantReplyEntry>()).Text);
         Assert.True(assistant.HasDraft);
-        Assert.Empty(assistant.Reply);
-        Assert.False(assistant.HasThinking);
+        Assert.False(assistant.IsBusy);
     }
 
     [Fact]
-    [DisplayName("A new call clears the reasoning at once, and replaces the reply shown only when it writes one")]
-    public async Task Explain_SecondCall_RestartsReasoningAndKeepsReplyUntilNewText()
+    [DisplayName("A second call's reply starts a new paragraph, and its reply alone stays when it is the only text")]
+    public async Task Explain_SecondCall_StartsANewParagraph()
     {
         var client = new ScriptedChatClient { TextPieceLength = 3 }
-            .Then(new TextReasoningContent("Check the samples."), Text("先送出說明。"), Call("c1", "submit_explanation", "{}"));
+            .Then(new TextReasoningContent("Check the samples."), Text("先送出說明。"), Call("c1", "submit_explanation", "{}"))
+            .Then((_, _) => new ChatResponse(new ChatMessage(ChatRole.Assistant, "這條規則無法說明。")));
         var (_, assistant) = Open(Load(client));
-        (string Thinking, string Reply)? atSecondCall = null;
-        client.Then((_, _) =>
-        {
-            assistant.ShowStreamed();
-            atSecondCall = (assistant.ThinkingText, assistant.Reply);
-            return new ChatResponse(new ChatMessage(ChatRole.Assistant, "這條規則無法說明。"));
-        });
 
         await assistant.ExplainCommand.ExecuteAsync(null);
 
-        Assert.Equal((string.Empty, "先送出說明。"), atSecondCall);
-        Assert.Equal("這條規則無法說明。", assistant.Reply);
-        Assert.False(assistant.IsReplyError);
-        Assert.False(assistant.HasThinking);
+        var reply = Assert.Single(assistant.Conversation.Entries.OfType<AssistantReplyEntry>());
+        Assert.Equal("先送出說明。\n\n這條規則無法說明。", reply.Text);
+        Assert.DoesNotContain(assistant.Conversation.Entries, entry => entry is ErrorEntry);
     }
 
     [Fact]
-    [DisplayName("The reasoning shown is cut to its last characters, so a long summary does not push the dialog open")]
-    public async Task Draft_LongReasoning_ShowsItsTail()
+    [DisplayName("Without an accepted result and without a reply, the conversation says the assistant did not finish")]
+    public async Task Draft_NoResultNoReply_SaysItDidNotFinish()
     {
-        var reasoning = string.Concat(Enumerable.Repeat("abcdefghij", 50)) + "THE END";
-        var client = new ScriptedChatClient().Then(new TextReasoningContent(reasoning), Call("c1", "submit_rule", Draft));
+        var client = new ScriptedChatClient().Then((_, _) => new ChatResponse(new ChatMessage(ChatRole.Assistant, [])));
         var (_, assistant) = Open(Load(client));
-        var shown = string.Empty;
-        client.AfterUpdate = _ =>
-        {
-            assistant.ShowStreamed();
-            if (assistant.HasThinking) shown = assistant.ThinkingText;
-        };
 
-        assistant.Request = "金額超過 10 萬要有核准人";
-        await assistant.DraftCommand.ExecuteAsync(null);
+        await assistant.SendAsync("金額超過 10 萬要有核准人");
 
-        Assert.StartsWith("…", shown, StringComparison.Ordinal);
-        Assert.EndsWith("THE END", shown, StringComparison.Ordinal);
-        Assert.True(shown.Length <= RuleAssistantViewModel.ThinkingTailLength + 1);
+        Assert.Equal(LocalizationService.Current["RuleAssistant_NoResult"],
+            Assert.Single(assistant.Conversation.Entries.OfType<ErrorEntry>()).Message);
     }
 
     [Fact]
@@ -288,19 +266,22 @@ public sealed class RuleAssistantTests : IDisposable
         var client = new ScriptedChatClient().Then((_, _) => throw new HttpRequestException("network down"));
         var (_, assistant) = Open(Load(client));
 
-        assistant.Request = "金額超過 10 萬要有核准人";
-        await assistant.DraftCommand.ExecuteAsync(null);
+        await assistant.SendAsync("金額超過 10 萬要有核准人");
 
-        Assert.True(assistant.IsReplyError);
-        Assert.Contains("network down", assistant.Reply, StringComparison.Ordinal);
+        Assert.Contains("network down", Assert.Single(assistant.Conversation.Entries.OfType<ErrorEntry>()).Message, StringComparison.Ordinal);
+        Assert.Equal(TurnOutcome.Failed, Assert.IsType<TurnSummaryEntry>(assistant.Conversation.Entries[^1]).Outcome);
         Assert.False(assistant.IsBusy);
-        Assert.True(assistant.DraftCommand.CanExecute(null));
-        Assert.False(assistant.ReviseCommand.CanExecute(null));
+        Assert.True(assistant.NewConversationCommand.CanExecute(null));
+
+        // The draft failed, so the next message asks for a rule again rather than revising one.
+        client.Then(Text("請問核准人是哪個欄位？"));
+        await assistant.SendAsync("再試一次");
+        Assert.Contains("再試一次", client.Requests[^1].Messages[^1].Text, StringComparison.Ordinal);
     }
 
     [Fact]
     [DisplayName("Without a credential the assistant asks nothing and never creates a chat client")]
-    public void NoCredential_NothingSent()
+    public async Task NoCredential_NothingSent()
     {
         var created = 0;
         var document = FormSchemaDocumentViewModel.Load(_solution.FormSchemaPaths["Order"], _solution);
@@ -312,9 +293,9 @@ public sealed class RuleAssistantTests : IDisposable
         document.RuleDraftingCredentialProvider = () => new DraftingCredential(false, "none", []);
         var (_, assistant) = Open(document);
 
-        assistant.Request = "金額超過 10 萬要有核准人";
+        await assistant.SendAsync("金額超過 10 萬要有核准人");
 
-        Assert.False(assistant.DraftCommand.CanExecute(null));
+        Assert.Empty(assistant.Conversation.Entries);
         Assert.False(assistant.ExplainCommand.CanExecute(null));
         Assert.Equal(0, created);
     }
@@ -326,16 +307,23 @@ public sealed class RuleAssistantTests : IDisposable
         var client = new ScriptedChatClient().Then(Text("請問核准人是哪個欄位？"));
         var (_, assistant) = Open(Load(client));
 
-        assistant.Request = "要有核准人";
-        await assistant.DraftCommand.ExecuteAsync(null);
+        await assistant.SendAsync("要有核准人");
 
-        Assert.Equal("請問核准人是哪個欄位？", assistant.Reply);
-        Assert.False(assistant.IsReplyError);
+        Assert.Equal("請問核准人是哪個欄位？", Assert.Single(assistant.Conversation.Entries.OfType<AssistantReplyEntry>()).Text);
+        Assert.DoesNotContain(assistant.Conversation.Entries, entry => entry is ErrorEntry);
         var prompt = client.Requests[0].Messages[0].Text;
         Assert.Contains("- IsBlank(", prompt, StringComparison.Ordinal);
         Assert.DoesNotContain("- RegexMatch(", prompt, StringComparison.Ordinal);
         Assert.Contains(DynamicExpressoEvaluator.HelperFunctions, f => f.Name == "RegexMatch");
-        Assert.True(assistant.ReviseCommand.CanExecute(null));
+
+        // The conversation goes on: the next message revises, until the user starts over.
+        client.Then(Text("好。")).Then(Text("好的。"));
+        await assistant.SendAsync("approver_id");
+        Assert.Equal(2, client.Requests[^1].Messages.Count(m => m.Role == ChatRole.User));
+        assistant.NewConversationCommand.Execute(null);
+        Assert.Empty(assistant.Conversation.Entries);
+        await assistant.SendAsync("要有核准人");
+        Assert.Equal(1, client.Requests[^1].Messages.Count(m => m.Role == ChatRole.User));
     }
 
     [Fact]
@@ -357,20 +345,5 @@ public sealed class RuleAssistantTests : IDisposable
         window.WriteRuleMessages(new RuleMessagesAppliedEventArgs(RuleId, [translation]));
         Assert.Equal("必須填核准人。", RuleMessageFiles.Read(file, RuleId));
         Assert.DoesNotContain(open, window.OpenDocuments);
-    }
-
-    [Fact]
-    [DisplayName("The usage line names the calls, the tokens with thousands separators and the seconds, or says no tokens were reported")]
-    public void DescribeUsage_TokensOrNone()
-    {
-        var withTokens = RuleAssistantViewModel.DescribeUsage(new RuleDraftingUsage(2, 18240, 2105, TimeSpan.FromSeconds(30)),
-            TimeSpan.FromSeconds(31.6));
-        var withoutTokens = RuleAssistantViewModel.DescribeUsage(new RuleDraftingUsage(3, 0, 0, TimeSpan.Zero), TimeSpan.FromSeconds(5));
-
-        Assert.Contains("18,240", withTokens, StringComparison.Ordinal);
-        Assert.Contains("2,105", withTokens, StringComparison.Ordinal);
-        Assert.Contains("32", withTokens, StringComparison.Ordinal);
-        Assert.Contains("3", withoutTokens, StringComparison.Ordinal);
-        Assert.DoesNotContain("18,240", withoutTokens, StringComparison.Ordinal);
     }
 }

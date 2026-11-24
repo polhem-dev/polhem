@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Polhem.Core.Data;
 using Polhem.Core.Serialization;
+using Polhem.Chat;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.Definition.Drafting;
@@ -293,7 +294,7 @@ public sealed class FormDraftingTests : IDisposable
 
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
-        Assert.Equal("The draft is ready.", Assert.IsType<DraftChatEntry>(viewModel.Messages[^1]).Text);
+        Assert.Equal("The draft is ready.", viewModel.Conversation.Entries.OfType<AssistantReplyEntry>().Last().Text);
         Assert.Equal(["leave_no", "leave_type"], viewModel.Fields.Select(f => f.FieldName));
         Assert.True(viewModel.IsReady);
         Assert.False(viewModel.IsBusy);
@@ -329,8 +330,7 @@ public sealed class FormDraftingTests : IDisposable
 
         Assert.Equal("Leave Type", session.Draft.Tables[0].Fields[0].Caption);
         Assert.False(viewModel.IsReady);
-        viewModel.InputText = "Thanks.";
-        await viewModel.SendCommand.ExecuteAsync(null);
+        await viewModel.SendAsync("Thanks.");
         Assert.Contains("caption of the field leave_type from \"Type\" to \"Leave Type\"", client.Requests[^1].Messages[^1].Text);
     }
 
@@ -345,9 +345,9 @@ public sealed class FormDraftingTests : IDisposable
 
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
-        var last = Assert.IsType<DraftChatEntry>(viewModel.Messages[^1]);
-        Assert.True(last.IsError);
-        Assert.Contains("network down", last.Text);
+        var error = Assert.Single(viewModel.Conversation.Entries.OfType<ErrorEntry>());
+        Assert.Contains("network down", error.Message);
+        Assert.Equal(TurnOutcome.Failed, Assert.IsType<TurnSummaryEntry>(viewModel.Conversation.Entries[^1]).Outcome);
         Assert.False(viewModel.IsBusy);
     }
 

@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Extensions.AI;
+using Polhem.Chat;
+using Polhem.DefineEditor.Converters;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.Definition.Drafting;
@@ -12,8 +14,8 @@ using static Polhem.Definition.Drafting.UnitTests.ScriptedChatClient;
 namespace Polhem.DefineEditor.UnitTests;
 
 /// <summary>
-/// The conversation pane of the drafting window: the cards that show what the model is doing, and the cards that let
-/// the user answer its questions by clicking. The model is scripted; nothing is called.
+/// The conversation of the drafting window: what the session reports, fed into the conversation the chat view shows, and
+/// the cards that let the user answer the model's questions by clicking. The model is scripted; nothing is called.
 /// </summary>
 public sealed class FormDraftingChatTests
 {
@@ -38,8 +40,8 @@ public sealed class FormDraftingChatTests
     }
 
     [Fact]
-    [DisplayName("A turn's tool calls show as one activity card before the reply, collapsed and counted when the turn ends")]
-    public async Task StartAsync_ToolCalls_ShowActivityCardBeforeTheReply()
+    [DisplayName("A turn's tool calls show in the conversation before the reply, with the editor's titles; a refused one fails with the reason")]
+    public async Task StartAsync_ToolCalls_ShowBeforeTheReply()
     {
         var client = new ScriptedChatClient()
             .Then(Call("1", "upsert_field", """{"table":"master","fieldName":"leave_type","caption":"Type"}"""),
@@ -49,49 +51,40 @@ public sealed class FormDraftingChatTests
 
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
-        Assert.Collection(viewModel.Messages,
-            item => Assert.True(Assert.IsType<DraftChatEntry>(item).IsUser),
-            item =>
+        Assert.Collection(viewModel.Conversation.Entries,
+            entry => Assert.Contains("leave.pdf", Assert.IsType<UserPromptEntry>(entry).Text, StringComparison.Ordinal),
+            entry =>
             {
-                var card = Assert.IsType<DraftActivityCard>(item);
-                Assert.False(card.IsRunning);
-                Assert.False(card.IsExpanded);
-                Assert.Equal(LocalizationService.Current["DraftingStep_Done"].Replace("{0}", "2", StringComparison.Ordinal), card.Title);
-                Assert.Equal(2, card.Steps.Count);
-                Assert.Contains("leave_type", card.Steps[0].Text, StringComparison.Ordinal);
-                Assert.True(card.Steps[1].IsError);
-                Assert.True(card.Steps[1].HasDetail);
+                var call = Assert.IsType<ToolCallEntry>(entry);
+                Assert.Equal(FormDraftingViewModel.DescribeTool("upsert_field", "leave_type"), call.Title);
+                Assert.Equal(ToolCallStatus.Completed, call.Status);
             },
-            item => Assert.Equal("Drafted.", Assert.IsType<DraftChatEntry>(item).Text));
+            entry =>
+            {
+                var call = Assert.IsType<ToolCallEntry>(entry);
+                Assert.Equal(ToolCallStatus.Failed, call.Status);
+                Assert.False(string.IsNullOrEmpty(call.ErrorMessage));
+            },
+            entry => Assert.Equal("Drafted.", Assert.IsType<AssistantReplyEntry>(entry).Text),
+            entry => Assert.Equal(TurnOutcome.Completed, Assert.IsType<TurnSummaryEntry>(entry).Outcome));
+        Assert.False(viewModel.IsBusy);
+        Assert.False(viewModel.HasUsage);
     }
 
     [Fact]
-    [DisplayName("A reply of the model renders as Markdown; the user's message and an error show as written")]
-    public async Task StartAsync_Reply_RendersAsMarkdown()
-    {
-        var viewModel = CreateViewModel(new ScriptedChatClient().Then(Text("Drafted **three** fields.")), out _);
-
-        await viewModel.StartAsync([Text("a scanned leave request")]);
-
-        var entries = viewModel.Messages.OfType<DraftChatEntry>().ToList();
-        Assert.False(entries[0].RendersMarkdown);
-        Assert.True(entries[1].RendersMarkdown);
-        Assert.False(new DraftChatEntry(isUser: false, "The request failed.", isError: true).RendersMarkdown);
-    }
-
-    [Fact]
-    [DisplayName("A turn without tool calls leaves no activity card behind")]
-    public async Task StartAsync_ReplyOnly_LeavesNoActivityCard()
+    [DisplayName("A turn without tool calls shows no tool call")]
+    public async Task StartAsync_ReplyOnly_ShowsNoToolCall()
     {
         var viewModel = CreateViewModel(new ScriptedChatClient().Then(Text("Hello.")), out _);
 
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
-        Assert.DoesNotContain(viewModel.Messages, item => item is DraftActivityCard);
+        Assert.DoesNotContain(viewModel.Conversation.Entries, entry => entry is ToolCallEntry);
+        Assert.Equal("Hello.", Assert.Single(viewModel.Conversation.Entries.OfType<AssistantReplyEntry>()).Text);
     }
 
     [Fact]
-    [DisplayName("Clicking an option of a single question sends it as the user's message and closes the card")]
+    [DisplayName("The questions the model asked show after its reply; clicking an option of a single question sends it and closes the card")]
     public async Task QuestionCard_SingleQuestion_ClickSendsTheAnswer()
     {
         var client = new ScriptedChatClient()
@@ -101,7 +94,10 @@ public sealed class FormDraftingChatTests
         var viewModel = CreateViewModel(client, out _);
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
-        var card = Assert.IsType<DraftQuestionCard>(viewModel.Messages[^1]);
+        var entries = viewModel.Conversation.Entries;
+        var card = Assert.IsType<DraftQuestionCard>(entries[^2]);
+        Assert.IsType<AssistantReplyEntry>(entries[^3]);
+        Assert.IsType<TurnSummaryEntry>(entries[^1]);
         var question = Assert.Single(card.Questions);
         Assert.True(question.Choices[0].IsRecommended);
         question.Choices[1].SelectCommand.Execute(null);
@@ -109,7 +105,7 @@ public sealed class FormDraftingChatTests
         Assert.False(card.IsOpen);
         Assert.False(question.Choices[0].IsOpen);
         Assert.Equal("LeaveApplication", client.Requests[^1].Messages[^1].Text);
-        Assert.Contains(viewModel.Messages, item => item is DraftChatEntry { IsUser: true, Text: "LeaveApplication" });
+        Assert.Contains(viewModel.Conversation.Entries, entry => entry is UserPromptEntry { Text: "LeaveApplication" });
     }
 
     [Fact]
@@ -122,7 +118,7 @@ public sealed class FormDraftingChatTests
             .Then(Text("Thanks."));
         var viewModel = CreateViewModel(client, out _);
         await viewModel.StartAsync([Text("a scanned leave request")]);
-        var card = Assert.IsType<DraftQuestionCard>(viewModel.Messages[^1]);
+        var card = Assert.Single(viewModel.Conversation.Entries.OfType<DraftQuestionCard>());
         var requests = client.Requests.Count;
 
         card.Questions[0].Choices[0].SelectCommand.Execute(null);
@@ -157,7 +153,7 @@ public sealed class FormDraftingChatTests
 
     [Fact]
     [DisplayName("Typing a reply instead of clicking closes the open question card")]
-    public async Task SendCommand_OpenQuestions_ClosesTheCard()
+    public async Task SendAsync_OpenQuestions_ClosesTheCard()
     {
         var client = new ScriptedChatClient()
             .Then(Call("1", "ask_user", OneQuestion))
@@ -165,16 +161,29 @@ public sealed class FormDraftingChatTests
             .Then(Text("OK."));
         var viewModel = CreateViewModel(client, out _);
         await viewModel.StartAsync([Text("a scanned leave request")]);
-        var card = Assert.IsType<DraftQuestionCard>(viewModel.Messages[^1]);
+        var card = Assert.Single(viewModel.Conversation.Entries.OfType<DraftQuestionCard>());
 
-        viewModel.InputText = "Use LeaveForm instead.";
-        await viewModel.SendCommand.ExecuteAsync(null);
+        await viewModel.SendAsync("Use LeaveForm instead.");
 
         Assert.False(card.IsOpen);
+        Assert.Equal("Use LeaveForm instead.", client.Requests[^1].Messages[^1].Text);
     }
 
     [Fact]
-    [DisplayName("Questions asked in a turn that then fails are not offered")]
+    [DisplayName("A blank message, or one sent while a turn runs, sends nothing")]
+    public async Task SendAsync_BlankOrBusy_SendsNothing()
+    {
+        var client = new ScriptedChatClient().Then(Text("Hello."));
+        var viewModel = CreateViewModel(client, out _);
+
+        await viewModel.SendAsync("   ");
+
+        Assert.Empty(client.Requests);
+        Assert.Empty(viewModel.Conversation.Entries);
+    }
+
+    [Fact]
+    [DisplayName("Questions asked in a turn that then fails are not offered, and the failure is reported")]
     public async Task StartAsync_TurnFailsAfterQuestions_ShowsNoQuestionCard()
     {
         var client = new ScriptedChatClient()
@@ -184,193 +193,152 @@ public sealed class FormDraftingChatTests
 
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
-        Assert.DoesNotContain(viewModel.Messages, item => item is DraftQuestionCard);
-        Assert.True(Assert.IsType<DraftChatEntry>(viewModel.Messages[^1]).IsError);
-        var card = Assert.Single(viewModel.Messages.OfType<DraftActivityCard>());
-        Assert.Equal(LocalizationService.Current["DraftingStep_StoppedOne"], card.Title);
+        var entries = viewModel.Conversation.Entries;
+        Assert.DoesNotContain(entries, entry => entry is DraftQuestionCard);
+        Assert.Contains("network down", Assert.Single(entries.OfType<ErrorEntry>()).Message, StringComparison.Ordinal);
+        Assert.Equal(TurnOutcome.Failed, Assert.IsType<TurnSummaryEntry>(entries[^1]).Outcome);
+        Assert.Equal(ToolCallStatus.Completed, Assert.Single(entries.OfType<ToolCallEntry>()).Status);
     }
 
     [Fact]
-    [DisplayName("Every tool of the drafting session has a step description, which takes the subject")]
-    public void Describe_EveryTool_HasItsOwnText()
+    [DisplayName("Every tool of the drafting session has a title of its own, which takes the subject")]
+    public void DescribeTool_EveryTool_HasItsOwnText()
     {
         var tools = new[]
         {
             "set_form_info", "upsert_table", "remove_table", "upsert_field", "remove_field", "search_progids",
             "get_progid_fields", "set_relation", "get_draft", "validate_draft", "mark_ready", "ask_user",
         };
-        var other = DraftActivityCard.Describe("no_such_tool", "x");
+        var other = FormDraftingViewModel.DescribeTool("no_such_tool", "x");
 
         Assert.Contains("no_such_tool", other, StringComparison.Ordinal);
         Assert.All(tools, tool => Assert.NotEqual(LocalizationService.Current["DraftingStep_Other"].Replace("{0}", tool, StringComparison.Ordinal),
-            DraftActivityCard.Describe(tool, "x")));
+            FormDraftingViewModel.DescribeTool(tool, "x")));
     }
 
     [Fact]
-    [DisplayName("A streamed reply shows in one bubble as it arrives, and the whole reply replaces it when the response ends")]
-    public async Task StartAsync_StreamedReply_GrowsOneBubbleThenCompletes()
+    [DisplayName("A streamed reply shows as one reply, which holds the whole text when the response ends")]
+    public async Task StartAsync_StreamedReply_ShowsOneReply()
     {
         var client = new ScriptedChatClient { TextPieceLength = 5 }.Then(Text("Drafted **three** fields."));
-        var viewModel = CreateViewModel(client, out var session);
-        DraftChatEntry? first = null;
-        var firstText = string.Empty;
-        session.AssistantMessageDelta += (_, _) =>
-        {
-            if (first is not null) return;
-            first = viewModel.Messages.OfType<DraftChatEntry>().Last();
-            firstText = first.Text;
-        };
-
-        await viewModel.StartAsync([Text("a scanned leave request")]);
-
-        Assert.NotNull(first);
-        Assert.Equal("Draft", firstText);
-        var reply = Assert.Single(viewModel.Messages.OfType<DraftChatEntry>(), entry => entry.IsAssistant);
-        Assert.Same(first, reply);
-        Assert.Equal("Drafted **three** fields.", reply.Text);
-        Assert.False(reply.IsStreaming);
-        Assert.True(reply.CanCopy);
-    }
-
-    [Fact]
-    [DisplayName("A reply that breaks off when the turn fails is removed, and the failure is reported")]
-    public async Task SendAsync_StreamBreaksOff_RemovesTheUnfinishedReply()
-    {
-        var client = new ScriptedChatClient { TextPieceLength = 4 }
-            .Then(Text("Reading."))
-            .Then(Text("Removing the table"), FailHere("The connection dropped."));
-        var viewModel = CreateViewModel(client, out var session);
-        await viewModel.StartAsync([Text("a scanned leave request")]);
-        var sawStreaming = false;
-        session.AssistantMessageDelta += (_, _) => sawStreaming |= viewModel.Messages.OfType<DraftChatEntry>().Any(e => e.IsStreaming);
-        viewModel.InputText = "Remove the table.";
-
-        await viewModel.SendCommand.ExecuteAsync(null);
-
-        Assert.True(sawStreaming);
-        var entries = viewModel.Messages.OfType<DraftChatEntry>().ToList();
-        Assert.DoesNotContain(entries, entry => entry.IsStreaming || entry.Text.StartsWith("Removing", StringComparison.Ordinal));
-        Assert.True(entries[^1].IsError);
-        Assert.Contains("The connection dropped.", entries[^1].Text, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    [DisplayName("A response's reasoning goes into the activity card above its streamed reply, not into a new card below it")]
-    public async Task StartAsync_ReasoningAndReply_ReasoningStaysInTheCardAbove()
-    {
-        var client = new ScriptedChatClient { TextPieceLength = 3 }
-            .Then(new TextReasoningContent("Look at the form."), Text("Drafted."));
         var viewModel = CreateViewModel(client, out _);
 
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
-        Assert.Collection(viewModel.Messages,
-            item => Assert.True(Assert.IsType<DraftChatEntry>(item).IsUser),
-            item => Assert.True(Assert.Single(Assert.IsType<DraftActivityCard>(item).Steps).IsReasoning),
-            item => Assert.Equal("Drafted.", Assert.IsType<DraftChatEntry>(item).Text));
+        var reply = Assert.Single(viewModel.Conversation.Entries.OfType<AssistantReplyEntry>());
+        Assert.Equal("Drafted **three** fields.", reply.Text);
+        Assert.False(reply.IsStreaming);
     }
 
     [Fact]
-    [DisplayName("After a turn the usage line shows its calls, tokens and seconds")]
-    public async Task StartAsync_Turn_ShowsItsUsage()
+    [DisplayName("A reply that breaks off when the turn fails keeps what arrived, and the failure is reported after it")]
+    public async Task SendAsync_StreamBreaksOff_KeepsWhatArrivedAndReportsTheFailure()
+    {
+        var client = new ScriptedChatClient { TextPieceLength = 4 }
+            .Then(Text("Reading."))
+            .Then(Text("Removing the table"), FailHere("The connection dropped."));
+        var viewModel = CreateViewModel(client, out _);
+        await viewModel.StartAsync([Text("a scanned leave request")]);
+
+        await viewModel.SendAsync("Remove the table.");
+
+        var entries = viewModel.Conversation.Entries;
+        var reply = entries.OfType<AssistantReplyEntry>().Last();
+        Assert.StartsWith("Remo", reply.Text, StringComparison.Ordinal);
+        Assert.False(reply.IsStreaming);
+        Assert.Contains("The connection dropped.", Assert.IsType<ErrorEntry>(entries[^2]).Message, StringComparison.Ordinal);
+        Assert.Equal(TurnOutcome.Failed, Assert.IsType<TurnSummaryEntry>(entries[^1]).Outcome);
+    }
+
+    [Fact]
+    [DisplayName("A response's streamed reasoning shows once, before its reply, and the summary the session reports afterwards adds nothing")]
+    public async Task StartAsync_StreamedReasoning_ShowsOnceBeforeTheReply()
+    {
+        var client = new ScriptedChatClient { TextPieceLength = 6 }
+            .Then(new TextReasoningContent("Check the leave types first."), Text("Drafted."));
+        var viewModel = CreateViewModel(client, out _);
+
+        await viewModel.StartAsync([Text("a scanned leave request")]);
+
+        Assert.Collection(viewModel.Conversation.Entries,
+            entry => Assert.IsType<UserPromptEntry>(entry),
+            entry =>
+            {
+                var reasoning = Assert.IsType<ReasoningEntry>(entry);
+                Assert.Equal("Check the leave types first.", reasoning.Text);
+                Assert.False(reasoning.IsStreaming);
+            },
+            entry => Assert.Equal("Drafted.", Assert.IsType<AssistantReplyEntry>(entry).Text),
+            entry => Assert.IsType<TurnSummaryEntry>(entry));
+    }
+
+    [Fact]
+    [DisplayName("A provider that streams nothing still shows the reasoning and the reply the session reports")]
+    public async Task StartAsync_NothingStreamed_ShowsTheReportedReasoningAndReply()
+    {
+        var client = new ScriptedChatClient().Then((_, _) => new ChatResponse(new ChatMessage(ChatRole.Assistant,
+            [new TextReasoningContent("Read the form."), new TextContent("Drafted.")])));
+        var viewModel = CreateViewModel(client, out _);
+
+        await viewModel.StartAsync([Text("a scanned leave request")]);
+
+        Assert.Equal("Read the form.", Assert.Single(viewModel.Conversation.Entries.OfType<ReasoningEntry>()).Text);
+        Assert.Equal("Drafted.", Assert.Single(viewModel.Conversation.Entries.OfType<AssistantReplyEntry>()).Text);
+    }
+
+    [Fact]
+    [DisplayName("The turn's summary carries its input, cached and output tokens, and the progress line is cleared after it")]
+    public async Task StartAsync_Turn_SummaryCarriesItsTokens()
     {
         var client = new ScriptedChatClient().Then((_, _) => new ChatResponse(new ChatMessage(ChatRole.Assistant, "Drafted."))
         {
             Usage = new UsageDetails { InputTokenCount = 18240, OutputTokenCount = 2105, CachedInputTokenCount = 16000 },
         });
         var viewModel = CreateViewModel(client, out var session);
-        Assert.False(viewModel.HasUsage);
 
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
-        Assert.True(viewModel.HasUsage);
-        Assert.Contains("18,240", viewModel.UsageText, StringComparison.Ordinal);
-        Assert.Contains("16,000", viewModel.UsageText, StringComparison.Ordinal);
-        Assert.Contains("2,105", viewModel.UsageText, StringComparison.Ordinal);
+        var usage = Assert.IsType<TurnSummaryEntry>(viewModel.Conversation.Entries[^1]).Usage!;
+        Assert.Equal(18240, usage.InputTokenCount);
+        Assert.Equal(2105, usage.OutputTokenCount);
+        Assert.Equal(16000, usage.CachedInputTokenCount);
         Assert.Equal(1, session.LastTurnUsage.Calls);
+        Assert.False(viewModel.HasUsage);
     }
 
     [Fact]
-    [DisplayName("The usage line leaves out the cache when nothing was cached, and says so when no tokens were reported")]
-    public void DescribeUsage_CachedOrNone()
+    [DisplayName("The summary line names the cached tokens only when there are some, leaves out tokens nobody reported, and says how the turn ended")]
+    public void TurnSummaryConverter_CachedNoneAndOutcome()
     {
-        var cached = FormDraftingViewModel.DescribeUsage(new FormDraftUsage(2, 18240, 2105, 16000, TimeSpan.Zero), TimeSpan.FromSeconds(30));
-        var uncached = FormDraftingViewModel.DescribeUsage(new FormDraftUsage(2, 18240, 2105, 0, TimeSpan.Zero), TimeSpan.FromSeconds(30));
-        var none = FormDraftingViewModel.DescribeUsage(new FormDraftUsage(3, 0, 0, 0, TimeSpan.Zero), TimeSpan.FromSeconds(5));
+        static string Line(UsageDetails? usage, TurnOutcome outcome = TurnOutcome.Completed)
+            => TurnSummaryConverter.Describe(new TurnSummaryEntry(TimeSpan.FromSeconds(30), usage, outcome));
+
+        var cached = Line(new UsageDetails { InputTokenCount = 18240, OutputTokenCount = 2105, CachedInputTokenCount = 16000 });
+        var uncached = Line(new UsageDetails { InputTokenCount = 18240, OutputTokenCount = 2105 });
+        var none = Line(usage: null, TurnOutcome.Stopped);
 
         Assert.Contains("16,000", cached, StringComparison.Ordinal);
         Assert.Contains("18,240", uncached, StringComparison.Ordinal);
         Assert.DoesNotContain("16,000", uncached, StringComparison.Ordinal);
-        Assert.Equal(LocalizationService.Current["Drafting_UsageNoTokens"].Replace("{0}", "3", StringComparison.Ordinal)
-            .Replace("{1}", "5", StringComparison.Ordinal), none);
+        Assert.Equal(LocalizationService.Current["ChatSummary_Seconds"].Replace("{0}", "30", StringComparison.Ordinal)
+            + LocalizationService.Current["ChatSummary_Separator"] + LocalizationService.Current["ChatSummary_Stopped"], none);
     }
 
     [Fact]
-    [DisplayName("The reasoning in progress shows under the card's title, and becomes a step of the card when the response ends")]
-    public async Task StartAsync_StreamedReasoning_ShowsLiveThenBecomesAStep()
-    {
-        var client = new ScriptedChatClient { TextPieceLength = 6 }
-            .Then(new TextReasoningContent("Check the leave types first."), Text("Drafted."));
-        var viewModel = CreateViewModel(client, out _);
-        var live = new List<string>();
-        client.AfterUpdate = _ =>
-        {
-            if (viewModel.Messages.OfType<DraftActivityCard>().LastOrDefault() is { HasLiveReasoning: true } card)
-                live.Add(card.LiveReasoning);
-        };
-
-        await viewModel.StartAsync([Text("a scanned leave request")]);
-
-        Assert.Equal("Check", live[0]);
-        var finished = Assert.Single(viewModel.Messages.OfType<DraftActivityCard>());
-        Assert.False(finished.HasLiveReasoning);
-        var step = Assert.Single(finished.Steps);
-        Assert.True(step.IsReasoning);
-        Assert.Equal("Check the leave types first.", step.Detail);
-    }
-
-    [Fact]
-    [DisplayName("Reasoning that arrives after the reply opened a bubble still goes to the card above it, and a long summary shows its end")]
-    public async Task StartAsync_ReasoningAfterReply_StaysInTheCardAbove()
-    {
-        var reasoning = string.Concat(Enumerable.Repeat("abcdefghij", 40)) + "THE END";
-        var client = new ScriptedChatClient().Then(Text("Working on it."), new TextReasoningContent(reasoning));
-        var viewModel = CreateViewModel(client, out _);
-        var shown = string.Empty;
-        client.AfterUpdate = _ =>
-        {
-            if (viewModel.Messages.OfType<DraftActivityCard>().FirstOrDefault() is { HasLiveReasoning: true } card)
-                shown = card.LiveReasoning;
-        };
-
-        await viewModel.StartAsync([Text("a scanned leave request")]);
-
-        Assert.StartsWith("…", shown, StringComparison.Ordinal);
-        Assert.EndsWith("THE END", shown, StringComparison.Ordinal);
-        Assert.True(shown.Length <= DraftActivityCard.LiveReasoningLength + 1);
-        Assert.Single(viewModel.Messages.OfType<DraftActivityCard>());
-        Assert.IsType<DraftActivityCard>(viewModel.Messages[1]);
-        Assert.Equal("Working on it.", Assert.IsType<DraftChatEntry>(viewModel.Messages[2]).Text);
-    }
-
-    [Fact]
-    [DisplayName("A turn that fails while the model reasons leaves no reasoning on its card")]
-    public async Task SendAsync_FailsWhileReasoning_ClearsTheLiveReasoning()
+    [DisplayName("A turn that fails while the model reasons ends its reasoning and reports the failure")]
+    public async Task SendAsync_FailsWhileReasoning_EndsTheReasoning()
     {
         var client = new ScriptedChatClient { TextPieceLength = 4 }
             .Then(Text("Reading."))
             .Then(new TextReasoningContent("Remove the table and"), FailHere("The connection dropped."));
         var viewModel = CreateViewModel(client, out _);
         await viewModel.StartAsync([Text("a scanned leave request")]);
-        var sawLive = false;
-        client.AfterUpdate = _ => sawLive |= viewModel.Messages.OfType<DraftActivityCard>().Any(card => card.HasLiveReasoning);
-        viewModel.InputText = "Remove the table.";
 
-        await viewModel.SendCommand.ExecuteAsync(null);
+        await viewModel.SendAsync("Remove the table.");
 
-        Assert.True(sawLive);
-        Assert.All(viewModel.Messages.OfType<DraftActivityCard>(), card => Assert.False(card.HasLiveReasoning));
-        Assert.True(Assert.IsType<DraftChatEntry>(viewModel.Messages[^1]).IsError);
+        var entries = viewModel.Conversation.Entries;
+        Assert.All(entries.OfType<ReasoningEntry>(), reasoning => Assert.False(reasoning.IsStreaming));
+        Assert.Contains("The connection dropped.", Assert.Single(entries.OfType<ErrorEntry>()).Message, StringComparison.Ordinal);
     }
 
     [Fact]
