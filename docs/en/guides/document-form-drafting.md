@@ -138,6 +138,12 @@ As a guide, measured on 2026-11-14 with eight synthetic forms (printed, handwrit
 tables and relations): about US$0.25 and 80 seconds per form, with one or two replies from the person. Real documents
 vary with their length and with how much has to be asked. The Console shows what each organization has spent.
 
+DefineEditor writes one line for each request, from the drafting window and from the rule assistant alike, to
+`logs/ai-calls.log` beside its settings file (`~/Library/Application Support/Polhem.DefineEditor/` on macOS,
+`%APPDATA%\Polhem.DefineEditor\` on Windows). The line holds the time taken, the tokens, and how much reasoning came
+back, never the conversation itself. A request with `reasoning=0` was answered without thinking; one with reasoning
+blocks but `reasoningChars=0` thought without returning a summary to show.
+
 ## 7. Limits
 
 - One conversation drafts one form.

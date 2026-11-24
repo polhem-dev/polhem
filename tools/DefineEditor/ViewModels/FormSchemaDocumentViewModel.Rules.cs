@@ -80,7 +80,7 @@ public sealed partial class FormSchemaDocumentViewModel
         var files = RuleMessageFiles.Find(Solution, Schema.ProgId);
         var provider = UserSettings.Load().DraftingProvider;
         var credential = RuleDraftingCredentialProvider?.Invoke() ?? DraftingChatClients.DescribeCredential(provider);
-        var createClient = RuleDraftingChatClientFactory ?? (() => DraftingChatClients.Create(provider));
+        var createClient = RuleDraftingChatClientFactory ?? (() => DraftingChatClients.Create(provider, DraftingChatClients.RuleAssistantPurpose));
         var assistant = new RuleAssistantViewModel(Schema, dialog.RuleId, dialog.BuildRule,
             s_expressionCalculator, files, credential, createClient, LocalTimeZoneId());
         if (dialog.IsNew) return assistant;

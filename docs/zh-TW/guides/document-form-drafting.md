@@ -1,4 +1,4 @@
-<!-- source: en/guides/document-form-drafting.md blob: c65fdd572341a879761bc04b8c632b8358b9f3fb -->
+<!-- source: en/guides/document-form-drafting.md blob: c93e66759b60378379dded4874208fa535d3f6ec -->
 # 從文件草擬表單
 
 [English](../../en/guides/document-form-drafting.md) · [← 文件索引](../README.md)
@@ -119,6 +119,11 @@ ProgId 已存在時，**畫面**分頁顯示的是既有版面加上新欄位的
 
 參考數字：2026-11-14 以八份合成表單（印刷、手寫與拍照，部分含明細表與關聯）量測，每張表單約 US$0.25、80 秒，
 使用者回覆一到兩次。實際文件會依長度與需要詢問的多寡而不同。各組織的花費可在 Console 查看。
+
+DefineEditor 會為每個請求寫一行紀錄（草擬視窗與規則助手都算），寫在設定檔旁的 `logs/ai-calls.log`
+（macOS 是 `~/Library/Application Support/Polhem.DefineEditor/`，Windows 是 `%APPDATA%\Polhem.DefineEditor\`）。
+每行記下花費的時間、tokens，以及回傳了多少推理，不記對話內容。`reasoning=0` 的請求是模型沒有思考就回答；
+有推理區塊但 `reasoningChars=0` 的請求，則是有思考、只是沒有回傳可顯示的摘要。
 
 ## 7. 限制
 
