@@ -36,10 +36,6 @@ public sealed class DraftingChatFeed
     private string _callId = string.Empty;
     private bool _redrawPending;
     private bool _replyOpen;
-    private bool _separateNext;
-    private Block _last;
-
-    private enum Block { None, Reply, Reasoning, Other }
 
     /// <summary>Initializes a new instance of the <see cref="DraftingChatFeed"/> class.</summary>
     /// <param name="describeTool">The text a tool call shows, from the tool's name and what it works on.</param>
@@ -87,14 +83,12 @@ public sealed class DraftingChatFeed
             _reply.Clear();
             _reasoning.Clear();
             _replyOpen = false;
-            _separateNext = false;
-            _last = Block.None;
         }
     }
 
     /// <summary>
-    /// Marks the start of a request to the model within the turn: the turn counts it, and its reasoning and its reply
-    /// start new paragraphs when nothing came between them and the previous request's.
+    /// Marks the start of a request to the model within the turn: the turn counts it, and the request's reasoning and
+    /// reply start entries of their own.
     /// </summary>
     public void BeginRequest()
     {
@@ -103,7 +97,7 @@ public sealed class DraftingChatFeed
             if (_turn is not { } turn) return;
             Flush();
             turn.BeginCall();
-            _separateNext = true;
+            _replyOpen = false;
         }
     }
 
@@ -146,7 +140,7 @@ public sealed class DraftingChatFeed
                 AdditionalProperties = new AdditionalPropertiesDictionary { [SubjectProperty] = subject },
             };
             turn.Apply(new ChatResponseUpdate(ChatRole.Assistant, [call]));
-            Close(Block.Other);
+            _replyOpen = false;
         }
     }
 
@@ -169,7 +163,7 @@ public sealed class DraftingChatFeed
             };
             turn.Apply(new ChatResponseUpdate(ChatRole.Tool, [result]));
             _callId = string.Empty;
-            Close(Block.Other);
+            _replyOpen = false;
         }
     }
 
@@ -264,10 +258,10 @@ public sealed class DraftingChatFeed
         if (_turn is not { } turn) return;
         if (_reasoning.Length > 0)
         {
-            var text = Separate(Block.Reasoning, _reasoning.ToString());
+            var text = _reasoning.ToString();
             _reasoning.Clear();
             turn.Apply(new ChatResponseUpdate(ChatRole.Assistant, [new TextReasoningContent(text)]));
-            Close(Block.Reasoning);
+            _replyOpen = false;
         }
         if (_reply.Length > 0)
         {
@@ -277,25 +271,8 @@ public sealed class DraftingChatFeed
                 text = text.TrimStart();
             if (text.Length == 0) return;
             _reply.Clear();
-            text = Separate(Block.Reply, text);
             turn.Apply(new ChatResponseUpdate(ChatRole.Assistant, text));
-            Close(Block.Reply);
             _replyOpen = true;
         }
-    }
-
-    // NOTE: the conversation joins consecutive text into one reply and consecutive reasoning into one block. A new request
-    // writes a new paragraph, so it is separated from the previous request's when nothing came between them.
-    private string Separate(Block block, string text)
-    {
-        var separate = _separateNext && _last == block;
-        _separateNext = false;
-        return separate ? "\n\n" + text : text;
-    }
-
-    private void Close(Block block)
-    {
-        _last = block;
-        if (block != Block.Reply) _replyOpen = false;
     }
 }

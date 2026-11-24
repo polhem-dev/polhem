@@ -29,7 +29,7 @@ public sealed class DraftingChatFeedTests
     }
 
     [Fact]
-    [DisplayName("Each request is counted, and its reply starts a new paragraph when nothing came between it and the previous reply")]
+    [DisplayName("Each request is counted, and its reply starts an entry of its own")]
     public void BeginRequest_ConsecutiveReplies_AreSeparated()
     {
         var feed = Create();
@@ -39,7 +39,7 @@ public sealed class DraftingChatFeedTests
         feed.BeginRequest();
         feed.AppendReply("Two.");
 
-        Assert.Equal("One.\n\nTwo.", Assert.Single(feed.Conversation.Entries.OfType<AssistantReplyEntry>()).Text);
+        Assert.Equal(["One.", "Two."], feed.Conversation.Entries.OfType<AssistantReplyEntry>().Select(reply => reply.Text));
         Assert.Equal(2, feed.Conversation.CurrentTurn!.Calls);
     }
 

@@ -231,8 +231,8 @@ public sealed class RuleAssistantTests : IDisposable
     }
 
     [Fact]
-    [DisplayName("A second call's reply starts a new paragraph, and its reply alone stays when it is the only text")]
-    public async Task Explain_SecondCall_StartsANewParagraph()
+    [DisplayName("Each call's reply shows as a reply of its own")]
+    public async Task Explain_SecondCall_ShowsItsOwnReply()
     {
         var client = new ScriptedChatClient { TextPieceLength = 3 }
             .Then(new TextReasoningContent("Check the samples."), Text("先送出說明。"), Call("c1", "submit_explanation", "{}"))
@@ -241,8 +241,8 @@ public sealed class RuleAssistantTests : IDisposable
 
         await assistant.ExplainCommand.ExecuteAsync(null);
 
-        var reply = Assert.Single(assistant.Conversation.Entries.OfType<AssistantReplyEntry>());
-        Assert.Equal("先送出說明。\n\n這條規則無法說明。", reply.Text);
+        Assert.Equal(["先送出說明。", "這條規則無法說明。"],
+            assistant.Conversation.Entries.OfType<AssistantReplyEntry>().Select(reply => reply.Text));
         Assert.DoesNotContain(assistant.Conversation.Entries, entry => entry is ErrorEntry);
     }
 
