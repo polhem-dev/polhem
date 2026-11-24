@@ -52,13 +52,22 @@ public static class DraftingChatClients
         return string.Format(System.Globalization.CultureInfo.InvariantCulture, lookup(key), profileName ?? string.Empty);
     }
 
-    /// <summary>Creates a chat client for <paramref name="provider"/>.</summary>
+    /// <summary>The purpose that marks the form drafting window's calls in <see cref="CallLogFile"/>.</summary>
+    public const string FormDraftingPurpose = "form-drafting";
+
+    /// <summary>The purpose that marks the rule assistant's calls in <see cref="CallLogFile"/>.</summary>
+    public const string RuleAssistantPurpose = "rule-assistant";
+
+    /// <summary>
+    /// Creates a chat client for <paramref name="provider"/> that writes a line for each call to <see cref="CallLogFile"/>.
+    /// </summary>
     /// <param name="provider">The provider name from <see cref="UserSettings.DraftingProvider"/>.</param>
+    /// <param name="purpose">The feature that uses the client, such as <see cref="FormDraftingPurpose"/>.</param>
     /// <returns>A chat client; the caller disposes it.</returns>
-    public static IChatClient Create(string provider)
+    public static IChatClient Create(string provider, string purpose)
     {
         _ = provider;
-        return ClaudeChatClientFactory.Create(new ClaudeChatOptions());
+        return new CallLogChatClient(ClaudeChatClientFactory.Create(new ClaudeChatOptions()), purpose, CallLogFile.Append);
     }
 
     /// <summary>

@@ -73,7 +73,7 @@ public partial class MainWindowViewModel
         }
 
         var host = new DefineEditorDraftHost(Solution, SolutionPath);
-        var chatClient = DraftingChatClientFactory?.Invoke() ?? DraftingChatClients.Create(provider);
+        var chatClient = DraftingChatClientFactory?.Invoke() ?? DraftingChatClients.Create(provider, DraftingChatClients.FormDraftingPurpose);
         // The conversation starts in the language of the editor's user interface; the user can still write in another.
         var session = new FormDraftSession(chatClient, host,
             new FormDraftingOptions { ReplyCulture = LocalizationService.Current.Culture, MarkdownReplies = true });
