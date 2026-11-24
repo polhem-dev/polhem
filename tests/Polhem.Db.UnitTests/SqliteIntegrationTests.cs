@@ -196,7 +196,7 @@ namespace Polhem.Db.UnitTests
             var databaseId = TestDbConventions.GetDatabaseId(DatabaseType.SQLite);
             var connectionManager = _fx.GetRequiredService<IDbConnectionManager>();
             var dbAccess = _fx.NewDbAccess(databaseId);
-            const string tableName = "guid_default_test";
+            const string tableName = "guid_create_test";
 
             // On SQLite a Guid field carries a database-side default (hex(randomblob(16))), while the definition's
             // DefaultValue is an empty string. Unless both are normalized to the same form when read back, the
