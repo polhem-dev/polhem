@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Avalonia.Controls;
 using Polhem.Chat.Avalonia;
 using Polhem.DefineEditor.ViewModels;
+using Polhem.Markdown;
 
 namespace Polhem.DefineEditor.Views;
 
@@ -14,6 +15,13 @@ public partial class RuleAssistantPanel : UserControl
     {
         InitializeComponent();
         ChatLanguage.Follow(Chat, "RuleAssistant_RequestWatermark");
+
+        // IMPORTANT: the explanation is the model's text. An image in it would be fetched as soon as it shows, and a
+        // prompt injection can put data in the image's address, so the viewer loads none. The conversation's
+        // `ChatView` does the same by default.
+        var options = new MarkdownOptions();
+        options.AllowedImageSchemes.Clear();
+        ExplanationViewer.Options = options;
     }
 
     protected override void OnDataContextChanged(EventArgs e)

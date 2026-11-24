@@ -2,7 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="using:Polhem.DefineEditor.Models"
         xmlns:cc="using:AvaloniaEdit.CodeCompletion"
-        xmlns:md="using:Polhem.Markdown.Avalonia">
+        xmlns:md="using:Polhem.Markdown.Avalonia"
+        xmlns:chat="using:Polhem.Chat.Avalonia">
 
     <Styles.Resources>
         <!-- =================================================================
@@ -456,12 +457,14 @@
         <Setter Property="FontSize" Value="13"/>
     </Style>
 
-    <!-- Markdown replies start with a font that has Chinese glyphs, so their Latin text is not in Inter.
-         WARNING: with Inter first, Avalonia shapes Chinese text through its font fallback, which keeps the weight of the
-         previous run (AvaloniaUI/Avalonia#18199): bold Chinese text shows regular, or regular text bold. Listing a
-         Chinese font after Inter does not help, because only the first installed font is the primary one. -->
+    <!-- Markdown draws Chinese text in a font of its own, so bold Chinese text stays bold. Without it Avalonia shapes the
+         Chinese text through its font fallback, which keeps the weight of the previous run (AvaloniaUI/Avalonia#18199).
+         The conversation passes its value to the viewers of its replies. -->
     <Style Selector="md|MarkdownViewer">
-        <Setter Property="TextElement.FontFamily" Value="PingFang TC, Microsoft JhengHei, Noto Sans CJK TC, $Default"/>
+        <Setter Property="CjkFontFamily" Value="PingFang TC, Microsoft JhengHei UI, Noto Sans CJK TC"/>
+    </Style>
+    <Style Selector="chat|ChatView">
+        <Setter Property="CjkFontFamily" Value="PingFang TC, Microsoft JhengHei UI, Noto Sans CJK TC"/>
     </Style>
 
     <!-- =================================================================
