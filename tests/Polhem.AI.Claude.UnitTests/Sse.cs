@@ -41,6 +41,12 @@ namespace Polhem.AI.Claude.UnitTests
             Event(new { type = "content_block_delta", index, delta = new { type = "signature_delta", signature } }),
             Stop(index));
 
+        public static string ThinkingInPieces(int index, string signature, params string[] pieces) => string.Concat(
+            Event(new { type = "content_block_start", index, content_block = new { type = "thinking", thinking = "", signature = "" } }),
+            string.Concat(pieces.Select(thinking => Event(new { type = "content_block_delta", index, delta = new { type = "thinking_delta", thinking } }))),
+            Event(new { type = "content_block_delta", index, delta = new { type = "signature_delta", signature } }),
+            Stop(index));
+
         public static string ToolUse(int index, string id, string name, string inputJson) => string.Concat(
             Event(new
             {

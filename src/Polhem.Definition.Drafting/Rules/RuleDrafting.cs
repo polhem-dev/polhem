@@ -64,6 +64,29 @@ namespace Polhem.Definition.Drafting.Rules
         public event EventHandler<RuleDraftingProgress>? Progress;
 
         /// <summary>
+        /// Raised as the text of a response arrives, before the request returns.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The pieces since the last <see cref="Progress"/> that began a call are that call's text. The result's reply is
+        /// the text of the last call that wrote any, so a host that shows the pieces replaces them when a new call begins
+        /// to write. When a submission is accepted the request returns at once; the text shown so far is then usually a
+        /// sentence before the submission, which the result makes redundant.
+        /// </para>
+        /// <para>Raised on the thread the request runs on, which is not necessarily the thread that started it.</para>
+        /// </remarks>
+        public event EventHandler<AssistantMessageDeltaEventArgs>? ReplyDelta;
+
+        /// <summary>
+        /// Raised as the model's reasoning summary arrives, when the provider streams one (Claude does).
+        /// </summary>
+        /// <remarks>
+        /// The pieces since the last <see cref="Progress"/> that began a call are that call's reasoning. Raised on the
+        /// thread the request runs on, which is not necessarily the thread that started it.
+        /// </remarks>
+        public event EventHandler<ReasoningDeltaEventArgs>? ReasoningDelta;
+
+        /// <summary>
         /// Starts a new conversation and asks the model for a rule that checks what <paramref name="request"/> says.
         /// </summary>
         /// <param name="request">What the rule should check, in the user's words, such as "an amount over 100,000 needs an approver".</param>
@@ -187,8 +210,8 @@ namespace Polhem.Definition.Drafting.Rules
                 var lastRound = round >= _options.MaxToolRounds;
                 calls++;
                 Progress?.Invoke(this, new RuleDraftingProgress(Usage(), WaitingForModel: true));
-                var response = await _chatClient.GetResponseAsync(history.ToList(), lastRound ? replyOptions : toolOptions,
-                    cancellationToken).ConfigureAwait(false);
+                var response = await StreamResponseAsync(history, lastRound ? replyOptions : toolOptions, cancellationToken)
+                    .ConfigureAwait(false);
                 inputTokens += response.Usage?.InputTokenCount ?? 0;
                 outputTokens += response.Usage?.OutputTokenCount ?? 0;
                 Progress?.Invoke(this, new RuleDraftingProgress(Usage(), WaitingForModel: false));
@@ -204,6 +227,27 @@ namespace Polhem.Definition.Drafting.Rules
                 history.Add(new ChatMessage(ChatRole.Tool, results));
                 if (lastRound) { return (reply, Usage()); }
             }
+        }
+
+        // Streams one response, raising its text and reasoning as they arrive, and returns it whole once it has ended.
+        private async Task<ChatResponse> StreamResponseAsync(List<ChatMessage> history, ChatOptions options,
+            CancellationToken cancellationToken)
+        {
+            var updates = new List<ChatResponseUpdate>();
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(history.ToList(), options, cancellationToken)
+                .ConfigureAwait(false))
+            {
+                updates.Add(update);
+                if (update.Role is not null && update.Role != ChatRole.Assistant) { continue; }
+                foreach (var content in update.Contents)
+                {
+                    if (content is TextReasoningContent { Text.Length: > 0 } reasoning)
+                        ReasoningDelta?.Invoke(this, new ReasoningDeltaEventArgs(reasoning.Text));
+                    else if (content is TextContent { Text.Length: > 0 } text)
+                        ReplyDelta?.Invoke(this, new AssistantMessageDeltaEventArgs(text.Text));
+                }
+            }
+            return updates.ToChatResponse();
         }
 
         // Adds the response to the history, keeps its last non-blank reply in `reply`, and returns the tool calls it makes.

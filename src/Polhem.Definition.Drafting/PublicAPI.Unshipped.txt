@@ -31,3 +31,8 @@ override Polhem.Definition.Drafting.FormDraftUsage.ToString() -> string!
 static Polhem.Definition.Drafting.FormDraftUsage.None.get -> Polhem.Definition.Drafting.FormDraftUsage!
 static Polhem.Definition.Drafting.FormDraftUsage.operator !=(Polhem.Definition.Drafting.FormDraftUsage? left, Polhem.Definition.Drafting.FormDraftUsage? right) -> bool
 static Polhem.Definition.Drafting.FormDraftUsage.operator ==(Polhem.Definition.Drafting.FormDraftUsage? left, Polhem.Definition.Drafting.FormDraftUsage? right) -> bool
+Polhem.Definition.Drafting.ReasoningDeltaEventArgs
+Polhem.Definition.Drafting.ReasoningDeltaEventArgs.ReasoningDeltaEventArgs(string! text) -> void
+Polhem.Definition.Drafting.ReasoningDeltaEventArgs.Text.get -> string!
+Polhem.Definition.Drafting.Rules.RuleDrafting.ReasoningDelta -> System.EventHandler<Polhem.Definition.Drafting.ReasoningDeltaEventArgs!>?
+Polhem.Definition.Drafting.Rules.RuleDrafting.ReplyDelta -> System.EventHandler<Polhem.Definition.Drafting.AssistantMessageDeltaEventArgs!>?

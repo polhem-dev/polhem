@@ -83,7 +83,8 @@ The samples in the result are the engine's: a person who cannot read an expressi
 A request ends as soon as a submission is accepted, so its `Reply` is then empty; the model's words are kept for a
 question it asks or for why it could not finish. Each result carries its `Usage` (the calls to the model, the tokens the
 model reported and the time), and the `Progress` event reports it before and after every call, for a host that shows
-progress during a request.
+progress during a request. `ReasoningDelta` and `ReplyDelta` raise the model's reasoning summary and its text as they
+arrive; the pieces after a `Progress` that begins a call belong to that call.
 
 | Type | Purpose |
 |------|---------|

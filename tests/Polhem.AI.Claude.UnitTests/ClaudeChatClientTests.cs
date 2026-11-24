@@ -447,6 +447,26 @@ namespace Polhem.AI.Claude.UnitTests
             Assert.Equal(1000, response.Usage?.CachedInputTokenCount);
         }
 
+        [Fact]
+        [DisplayName("A stream yields the reasoning summary piece by piece as it arrives, and the collected response holds it once with its signature")]
+        public async Task GetStreamingResponseAsync_Thinking_ArrivesInPieces()
+        {
+            var handler = new FakeAnthropicHandler().ThenStream(Sse.MessageStart()
+                + Sse.ThinkingInPieces(0, "sig-1", "First. ", "Second.")
+                + Sse.Text(1, "Done.")
+                + Sse.MessageEnd("end_turn"));
+            using var client = ClaudeChatClientFactory.Create(handler.CreateClient(), null);
+
+            var updates = await Collect(client, [new ChatMessage(ChatRole.User, "Hello")]);
+
+            var pieces = updates.SelectMany(u => u.Contents).OfType<TextReasoningContent>()
+                .Select(r => r.Text).Where(text => text.Length > 0).ToList();
+            Assert.Equal(["First. ", "Second."], pieces);
+            var reasoning = Assert.Single(updates.ToChatResponse().Messages.SelectMany(m => m.Contents).OfType<TextReasoningContent>());
+            Assert.Equal("First. Second.", reasoning.Text);
+            Assert.Equal("sig-1", reasoning.ProtectedData);
+        }
+
         private static async Task<List<ChatResponseUpdate>> Collect(IChatClient client, List<ChatMessage> messages)
         {
             var updates = new List<ChatResponseUpdate>();
