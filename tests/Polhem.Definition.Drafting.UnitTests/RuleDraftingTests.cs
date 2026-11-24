@@ -501,6 +501,79 @@ namespace Polhem.Definition.Drafting.UnitTests
             Assert.Equal(new RuleDraftingUsage(1, 0, 0, result.Usage.Elapsed), result.Usage);
         }
 
+        [Fact]
+        [DisplayName("Reasoning and reply arrive in pieces between the progress of their call, and each call's pieces join into its text")]
+        public async Task ReviseAsync_StreamedCalls_RaisePiecesPerCall()
+        {
+            var client = new ScriptedChatClient { TextPieceLength = 4 }
+                .Then(Text("您要哪個金額？"))
+                .Then(new TextReasoningContent("Look at the amount field.") { ProtectedData = "sig-1" }, Text("改寫中。"),
+                    Call("c1", "submit_rule", ValidRule.Replace("\"expected\":\"Skipped\"", "\"expected\":\"Blocked\"", StringComparison.Ordinal)))
+                .Then(new TextReasoningContent("Fix the third sample."), Text("好了。"), Call("c2", "submit_rule", ValidRule));
+            var drafting = Create(client);
+            await drafting.DraftAsync("金額太大要有核准人");
+            var events = new List<string>();
+            var reply = new System.Text.StringBuilder();
+            var reasoning = new System.Text.StringBuilder();
+            var calls = new List<(string Reasoning, string Reply)>();
+            drafting.Progress += (_, e) =>
+            {
+                if (!e.WaitingForModel) { calls.Add((reasoning.ToString(), reply.ToString())); return; }
+                reply.Clear();
+                reasoning.Clear();
+            };
+            drafting.ReasoningDelta += (_, e) => { events.Add("reasoning"); reasoning.Append(e.Text); };
+            drafting.ReplyDelta += (_, e) => { events.Add("reply"); reply.Append(e.Text); };
+
+            var result = await drafting.ReviseAsync("十萬");
+
+            Assert.NotNull(result.Draft);
+            Assert.Equal([("Look at the amount field.", "改寫中。"), ("Fix the third sample.", "好了。")], calls);
+            Assert.True(events.IndexOf("reasoning") < events.IndexOf("reply"));
+            Assert.True(events.Count(e => e == "reasoning") > 2);
+            var echoed = client.Requests[^1].Messages.SelectMany(m => m.Contents).OfType<TextReasoningContent>().ToList();
+            Assert.Equal("sig-1", Assert.Single(echoed).ProtectedData);
+        }
+
+        [Fact]
+        [DisplayName("The reply of a request is the last call's text even when the pieces of an earlier call were raised")]
+        public async Task ExplainAsync_TextThenSilentCall_ReplyIsTheLastText()
+        {
+            var client = new ScriptedChatClient { TextPieceLength = 3 }
+                .Then(Text("我先看看。"), Call("c1", "submit_explanation", "{}"))
+                .Then(Text("這條規則無法說明。"));
+            var drafting = Create(client);
+            var pieces = new List<string>();
+            drafting.ReplyDelta += (_, e) => pieces.Add(e.Text);
+
+            var result = await drafting.ExplainAsync(new FormRule("r", "amount > 0", "Amount must be positive."));
+
+            Assert.Null(result.Explanation);
+            Assert.Equal("這條規則無法說明。", result.Reply);
+            Assert.Equal("我先看看。這條規則無法說明。", string.Concat(pieces));
+        }
+
+        [Fact]
+        [DisplayName("A request whose stream breaks off after its pieces were raised leaves the conversation as it was")]
+        public async Task ReviseAsync_StreamBreaksOff_RestoresTheConversation()
+        {
+            var client = new ScriptedChatClient { TextPieceLength = 2 }
+                .Then(Call("c1", "submit_rule", ValidRule))
+                .Then(Text("正在改寫"), FailHere("The connection dropped."))
+                .Then(Call("c2", "submit_rule", ValidRule));
+            var drafting = Create(client);
+            await drafting.DraftAsync("金額超過 10 萬要有核准人");
+            var pieces = 0;
+            drafting.ReplyDelta += (_, _) => pieces++;
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => drafting.ReviseAsync("改成 20 萬"));
+            var retried = await drafting.ReviseAsync("改成 20 萬");
+
+            Assert.True(pieces > 0);
+            Assert.NotNull(retried.Draft);
+            Assert.DoesNotContain(client.Requests[^1].Messages, m => m.Text.Contains("正在改寫", StringComparison.Ordinal));
+        }
+
         private static ChatResponse WithUsage(AIContent content, long input, long output) =>
             new(new ChatMessage(ChatRole.Assistant, [content]))
             {

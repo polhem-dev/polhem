@@ -1,7 +1,8 @@
 namespace Polhem.Definition.Drafting
 {
     /// <summary>
-    /// A piece of a reply the model is still writing, raised by <see cref="FormDraftSession.AssistantMessageDelta"/>.
+    /// A piece of a reply the model is still writing, raised by <see cref="FormDraftSession.AssistantMessageDelta"/> and
+    /// <see cref="Rules.RuleDrafting.ReplyDelta"/>.
     /// </summary>
     public sealed class AssistantMessageDeltaEventArgs : EventArgs
     {

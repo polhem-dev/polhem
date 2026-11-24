@@ -35,12 +35,18 @@ namespace Polhem.Definition.Drafting.UnitTests
         }
 
         /// <summary>
-        /// Gets or sets the length of the pieces a streamed text is cut into; 0 streams each text in one piece.
+        /// Gets or sets the length of the pieces a streamed text or reasoning is cut into; 0 streams each in one piece.
         /// </summary>
         public int TextPieceLength { get; set; }
 
         /// <summary>
-        /// Streams the next scripted response: each text in pieces of <see cref="TextPieceLength"/>, every other content
+        /// Gets or sets what runs after each streamed update, once the caller has taken it and asked for the next one, so a
+        /// test can look at what the caller showed for the pieces so far.
+        /// </summary>
+        public Action<ChatResponseUpdate>? AfterUpdate { get; set; }
+
+        /// <summary>
+        /// Streams the next scripted response: each text and reasoning in pieces of <see cref="TextPieceLength"/>, every other content
         /// in an update of its own, then the usage.
         /// </summary>
         public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages,
@@ -56,7 +62,9 @@ namespace Polhem.Definition.Drafting.UnitTests
                     foreach (var piece in Pieces(content))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        yield return new ChatResponseUpdate(message.Role, [piece]) { MessageId = "scripted" };
+                        var update = new ChatResponseUpdate(message.Role, [piece]) { MessageId = "scripted" };
+                        yield return update;
+                        AfterUpdate?.Invoke(update);
                     }
                 }
             }
@@ -66,13 +74,25 @@ namespace Polhem.Definition.Drafting.UnitTests
 
         private IEnumerable<AIContent> Pieces(AIContent content)
         {
-            if (content is not TextContent text || TextPieceLength <= 0 || text.Text.Length <= TextPieceLength)
+            var (whole, protectedData) = content switch
+            {
+                TextContent text => (text.Text, null),
+                TextReasoningContent reasoning => (reasoning.Text, reasoning.ProtectedData),
+                _ => ((string?)null, (string?)null),
+            };
+            if (whole is null || TextPieceLength <= 0 || whole.Length <= TextPieceLength)
             {
                 yield return content;
                 yield break;
             }
-            for (var start = 0; start < text.Text.Length; start += TextPieceLength)
-                yield return new TextContent(text.Text.Substring(start, Math.Min(TextPieceLength, text.Text.Length - start)));
+            for (var start = 0; start < whole.Length; start += TextPieceLength)
+            {
+                var piece = whole.Substring(start, Math.Min(TextPieceLength, whole.Length - start));
+                var last = start + TextPieceLength >= whole.Length;
+                yield return content is TextReasoningContent
+                    ? new TextReasoningContent(piece) { ProtectedData = last ? protectedData : null }
+                    : new TextContent(piece);
+            }
         }
 
         public object? GetService(Type serviceType, object? serviceKey = null) => null;

@@ -26,6 +26,10 @@
                 </WrapPanel>
                 <TextBlock Text="{Binding UsageText}" TextWrapping="Wrap" Classes="muted" FontSize="11"
                            IsVisible="{Binding UsageText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                <!-- The end of the reasoning the model is writing, while a request runs; the reply below grows as it
+                     arrives and gives way to the result when a rule or an explanation is accepted. -->
+                <TextBlock Text="{Binding ThinkingText}" TextWrapping="Wrap" Classes="muted" FontSize="11"
+                           FontStyle="Italic" IsVisible="{Binding HasThinking}"/>
                 <!-- The reply and the explanation render as Markdown (RuleDraftingOptions.MarkdownReplies); an error shows
                      as written. -->
                 <md:MarkdownViewer Markdown="{Binding Reply}" IsVisible="{Binding !IsReplyError}"

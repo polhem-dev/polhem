@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Microsoft.Extensions.AI;
 using Polhem.Core.Data;
 using Polhem.Core.Serialization;
 using Polhem.DefineEditor.Services;
@@ -209,6 +210,75 @@ public sealed class RuleAssistantTests : IDisposable
         Assert.Equal(2, assistant.Samples.Count);
         Assert.False(assistant.HasDraft);
         Assert.False(assistant.ApplyCommand.CanExecute(null));
+    }
+
+    [Fact]
+    [DisplayName("While a request runs the reasoning and the reply show as they arrive, and an accepted rule replaces them with the result")]
+    public async Task Draft_Streamed_ShowsReasoningAndReplyThenTheResult()
+    {
+        var client = new ScriptedChatClient { TextPieceLength = 4 }
+            .Then(new TextReasoningContent("The amount field decides it."), Text("我來寫這條規則。"), Call("c1", "submit_rule", Draft));
+        var (_, assistant) = Open(Load(client));
+        var seen = new List<(string Thinking, string Reply)>();
+        client.AfterUpdate = _ =>
+        {
+            assistant.ShowStreamed();
+            seen.Add((assistant.ThinkingText, assistant.Reply));
+        };
+
+        assistant.Request = "金額超過 10 萬要有核准人";
+        await assistant.DraftCommand.ExecuteAsync(null);
+
+        Assert.Contains(seen, s => s.Thinking == "The" && s.Reply.Length == 0);
+        Assert.Contains(seen, s => s.Thinking == "The amount field decides it." && s.Reply == "我來寫這條規則。");
+        Assert.True(assistant.HasDraft);
+        Assert.Empty(assistant.Reply);
+        Assert.False(assistant.HasThinking);
+    }
+
+    [Fact]
+    [DisplayName("A new call clears the reasoning at once, and replaces the reply shown only when it writes one")]
+    public async Task Explain_SecondCall_RestartsReasoningAndKeepsReplyUntilNewText()
+    {
+        var client = new ScriptedChatClient { TextPieceLength = 3 }
+            .Then(new TextReasoningContent("Check the samples."), Text("先送出說明。"), Call("c1", "submit_explanation", "{}"));
+        var (_, assistant) = Open(Load(client));
+        (string Thinking, string Reply)? atSecondCall = null;
+        client.Then((_, _) =>
+        {
+            assistant.ShowStreamed();
+            atSecondCall = (assistant.ThinkingText, assistant.Reply);
+            return new ChatResponse(new ChatMessage(ChatRole.Assistant, "這條規則無法說明。"));
+        });
+
+        await assistant.ExplainCommand.ExecuteAsync(null);
+
+        Assert.Equal((string.Empty, "先送出說明。"), atSecondCall);
+        Assert.Equal("這條規則無法說明。", assistant.Reply);
+        Assert.False(assistant.IsReplyError);
+        Assert.False(assistant.HasThinking);
+    }
+
+    [Fact]
+    [DisplayName("The reasoning shown is cut to its last characters, so a long summary does not push the dialog open")]
+    public async Task Draft_LongReasoning_ShowsItsTail()
+    {
+        var reasoning = string.Concat(Enumerable.Repeat("abcdefghij", 50)) + "THE END";
+        var client = new ScriptedChatClient().Then(new TextReasoningContent(reasoning), Call("c1", "submit_rule", Draft));
+        var (_, assistant) = Open(Load(client));
+        var shown = string.Empty;
+        client.AfterUpdate = _ =>
+        {
+            assistant.ShowStreamed();
+            if (assistant.HasThinking) shown = assistant.ThinkingText;
+        };
+
+        assistant.Request = "金額超過 10 萬要有核准人";
+        await assistant.DraftCommand.ExecuteAsync(null);
+
+        Assert.StartsWith("…", shown, StringComparison.Ordinal);
+        Assert.EndsWith("THE END", shown, StringComparison.Ordinal);
+        Assert.True(shown.Length <= RuleAssistantViewModel.ThinkingTailLength + 1);
     }
 
     [Fact]

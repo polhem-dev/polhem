@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.AI;
 using Polhem.DefineEditor.Services;
+using Polhem.Definition.Drafting;
 using Polhem.Definition.Drafting.Rules;
 using Polhem.Definition.Forms;
 using Polhem.Expressions;
@@ -34,6 +36,24 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     // Written by the drafting session's progress event, which may run on any thread, and read by the timer that updates
     // the progress line on the UI thread.
     private RuleDraftingProgress? _progress;
+    // The streamed text of the request in progress. The drafting session raises its pieces on any thread; they gather
+    // here under the lock, and the timer that updates the progress line shows them on the UI thread.
+    private readonly object _streamLock = new();
+    private readonly StringBuilder _streamReply = new();
+    private readonly StringBuilder _streamReasoning = new();
+    private int _streamCall;
+    private int _streamReplyCall;
+    private bool _streamChanged;
+    private bool _streaming;
+
+    /// <summary>The longest tail of the reasoning summary <see cref="ThinkingText"/> shows.</summary>
+    public const int ThinkingTailLength = 300;
+
+    /// <summary>
+    /// How often the progress line, the reasoning and the reply in progress are redrawn. The reply is Markdown, which each
+    /// redraw parses again, so the pieces that arrive in between are gathered rather than drawn one by one.
+    /// </summary>
+    private static readonly TimeSpan s_redrawInterval = TimeSpan.FromMilliseconds(80);
 
     /// <param name="schema">The form; it is read, never changed.</param>
     /// <param name="ruleId">The rule being edited. The model drafts against the form without it, so its id is free.</param>
@@ -107,6 +127,16 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     /// </summary>
     [ObservableProperty]
     private string _usageText = string.Empty;
+
+    /// <summary>
+    /// The end of the reasoning summary the model is writing in the call in progress; empty when no request runs.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasThinking))]
+    private string _thinkingText = string.Empty;
+
+    /// <summary>Whether there is reasoning to show.</summary>
+    public bool HasThinking => ThinkingText.Length > 0;
 
     /// <summary>Whether <see cref="Reply"/> reports a failure.</summary>
     [ObservableProperty]
@@ -227,6 +257,7 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     // Without one, its reply is a question to answer with Revise, or why it could not write the rule.
     private void ShowReply(bool accepted, string reply)
     {
+        StopStreaming();
         Reply = accepted ? string.Empty : reply.Length > 0 ? reply : L("RuleAssistant_NoResult");
         IsReplyError = !accepted && reply.Length == 0;
     }
@@ -248,20 +279,24 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
         IsReplyError = false;
         Reply = string.Empty;
         UsageText = DescribeProgress(clock.Elapsed);
+        StartStreaming();
         using var ticking = new CancellationTokenSource();
-        var ticker = TickAsync(clock, ticking.Token);
+        _ = TickAsync(clock, ticking.Token);
         try
         {
             _client ??= _createClient();
             if (_drafting is null)
             {
                 _drafting = new RuleDrafting(_client, _schema, _calculator, _options);
-                _drafting.Progress += (_, e) => Volatile.Write(ref _progress, e);
+                _drafting.Progress += OnProgress;
+                _drafting.ReplyDelta += OnReplyDelta;
+                _drafting.ReasoningDelta += OnReasoningDelta;
             }
             await request(_drafting, _cancellation.Token);
         }
         catch (OperationCanceledException) when (_cancellation.IsCancellationRequested)
         {
+            StopStreaming();
             Reply = L("RuleAssistant_Stopped");
             IsReplyError = true;
         }
@@ -269,13 +304,16 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
         {
             // Boundary: a request runs from a button of the dialog; an exception that escaped it would end the editor.
             // The drafting session leaves its conversation as it was before a failed request, so the user can retry.
+            StopStreaming();
             Reply = DraftingChatClients.DescribeFailure(ex) ?? L("RuleAssistant_Failed", ex.Message);
             IsReplyError = true;
         }
         finally
         {
-            await ticking.CancelAsync();
-            await ticker;
+            // NOTE: the ticker is cancelled, not awaited: awaiting it would add a real asynchronous hop at the end of
+            // every request (see FormDraftingViewModel.RunTurnAsync).
+            ticking.Cancel();
+            StopStreaming();
             UsageText = DescribeUsage(Volatile.Read(ref _progress)?.Usage, clock.Elapsed);
             _cancellation.Dispose();
             _cancellation = null;
@@ -285,21 +323,102 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
         }
     }
 
-    // Runs on the UI thread, as the request does, so the progress line changes there.
+    // Runs on the UI thread, as the request does, so the progress line and the streamed text change there.
     private async Task TickAsync(System.Diagnostics.Stopwatch clock, CancellationToken cancellationToken)
     {
         try
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(500, cancellationToken);
+                await Task.Delay(s_redrawInterval, cancellationToken);
+                // The request may have ended while the delay completed; its final line must stay.
+                if (cancellationToken.IsCancellationRequested) return;
                 UsageText = DescribeProgress(clock.Elapsed);
+                ShowStreamed();
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             // The request ended; the caller writes the final usage.
         }
+    }
+
+    private void OnProgress(object? sender, RuleDraftingProgress e)
+    {
+        Volatile.Write(ref _progress, e);
+        if (!e.WaitingForModel) return;
+        lock (_streamLock)
+        {
+            // A new call writes its own reasoning; its reply replaces the previous call's only once it writes one.
+            _streamCall = e.Usage.Calls;
+            _streamReasoning.Clear();
+            _streamChanged = true;
+        }
+    }
+
+    private void OnReplyDelta(object? sender, AssistantMessageDeltaEventArgs e)
+    {
+        lock (_streamLock)
+        {
+            if (_streamReplyCall != _streamCall)
+            {
+                _streamReply.Clear();
+                _streamReplyCall = _streamCall;
+            }
+            _streamReply.Append(e.Text);
+            _streamChanged = true;
+        }
+    }
+
+    private void OnReasoningDelta(object? sender, ReasoningDeltaEventArgs e)
+    {
+        lock (_streamLock)
+        {
+            _streamReasoning.Append(e.Text);
+            _streamChanged = true;
+        }
+    }
+
+    private void StartStreaming()
+    {
+        lock (_streamLock)
+        {
+            _streamReply.Clear();
+            _streamReasoning.Clear();
+            _streamCall = 0;
+            _streamReplyCall = 0;
+            _streamChanged = false;
+            _streaming = true;
+        }
+        ThinkingText = string.Empty;
+    }
+
+    // Ends what the request streamed: the result, an error or the stop message takes the reply's place.
+    private void StopStreaming()
+    {
+        lock (_streamLock)
+        {
+            _streaming = false;
+            _streamReply.Clear();
+            _streamReasoning.Clear();
+        }
+        ThinkingText = string.Empty;
+    }
+
+    /// <summary>Shows what has streamed since the last redraw: the reasoning's tail and the reply so far.</summary>
+    public void ShowStreamed()
+    {
+        string reply;
+        string reasoning;
+        lock (_streamLock)
+        {
+            if (!_streaming || !_streamChanged) return;
+            _streamChanged = false;
+            reply = _streamReply.ToString().Trim();
+            reasoning = _streamReasoning.ToString().Trim();
+        }
+        ThinkingText = reasoning.Length <= ThinkingTailLength ? reasoning : "…" + reasoning[^ThinkingTailLength..].TrimStart();
+        if (reply.Length > 0) Reply = reply;
     }
 
     private string DescribeProgress(TimeSpan elapsed)
