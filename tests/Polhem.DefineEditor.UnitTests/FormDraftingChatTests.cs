@@ -306,6 +306,74 @@ public sealed class FormDraftingChatTests
     }
 
     [Fact]
+    [DisplayName("The reasoning in progress shows under the card's title, and becomes a step of the card when the response ends")]
+    public async Task StartAsync_StreamedReasoning_ShowsLiveThenBecomesAStep()
+    {
+        var client = new ScriptedChatClient { TextPieceLength = 6 }
+            .Then(new TextReasoningContent("Check the leave types first."), Text("Drafted."));
+        var viewModel = CreateViewModel(client, out _);
+        var live = new List<string>();
+        client.AfterUpdate = _ =>
+        {
+            if (viewModel.Messages.OfType<DraftActivityCard>().LastOrDefault() is { HasLiveReasoning: true } card)
+                live.Add(card.LiveReasoning);
+        };
+
+        await viewModel.StartAsync([Text("a scanned leave request")]);
+
+        Assert.Equal("Check", live[0]);
+        var finished = Assert.Single(viewModel.Messages.OfType<DraftActivityCard>());
+        Assert.False(finished.HasLiveReasoning);
+        var step = Assert.Single(finished.Steps);
+        Assert.True(step.IsReasoning);
+        Assert.Equal("Check the leave types first.", step.Detail);
+    }
+
+    [Fact]
+    [DisplayName("Reasoning that arrives after the reply opened a bubble still goes to the card above it, and a long summary shows its end")]
+    public async Task StartAsync_ReasoningAfterReply_StaysInTheCardAbove()
+    {
+        var reasoning = string.Concat(Enumerable.Repeat("abcdefghij", 40)) + "THE END";
+        var client = new ScriptedChatClient().Then(Text("Working on it."), new TextReasoningContent(reasoning));
+        var viewModel = CreateViewModel(client, out _);
+        var shown = string.Empty;
+        client.AfterUpdate = _ =>
+        {
+            if (viewModel.Messages.OfType<DraftActivityCard>().FirstOrDefault() is { HasLiveReasoning: true } card)
+                shown = card.LiveReasoning;
+        };
+
+        await viewModel.StartAsync([Text("a scanned leave request")]);
+
+        Assert.StartsWith("…", shown, StringComparison.Ordinal);
+        Assert.EndsWith("THE END", shown, StringComparison.Ordinal);
+        Assert.True(shown.Length <= DraftActivityCard.LiveReasoningLength + 1);
+        Assert.Single(viewModel.Messages.OfType<DraftActivityCard>());
+        Assert.IsType<DraftActivityCard>(viewModel.Messages[1]);
+        Assert.Equal("Working on it.", Assert.IsType<DraftChatEntry>(viewModel.Messages[2]).Text);
+    }
+
+    [Fact]
+    [DisplayName("A turn that fails while the model reasons leaves no reasoning on its card")]
+    public async Task SendAsync_FailsWhileReasoning_ClearsTheLiveReasoning()
+    {
+        var client = new ScriptedChatClient { TextPieceLength = 4 }
+            .Then(Text("Reading."))
+            .Then(new TextReasoningContent("Remove the table and"), FailHere("The connection dropped."));
+        var viewModel = CreateViewModel(client, out _);
+        await viewModel.StartAsync([Text("a scanned leave request")]);
+        var sawLive = false;
+        client.AfterUpdate = _ => sawLive |= viewModel.Messages.OfType<DraftActivityCard>().Any(card => card.HasLiveReasoning);
+        viewModel.InputText = "Remove the table.";
+
+        await viewModel.SendCommand.ExecuteAsync(null);
+
+        Assert.True(sawLive);
+        Assert.All(viewModel.Messages.OfType<DraftActivityCard>(), card => Assert.False(card.HasLiveReasoning));
+        Assert.True(Assert.IsType<DraftChatEntry>(viewModel.Messages[^1]).IsError);
+    }
+
+    [Fact]
     [DisplayName("The zh-TW strings have the same keys and placeholders as the English ones")]
     public void Strings_ZhTw_MatchEnglishKeysAndPlaceholders()
     {
