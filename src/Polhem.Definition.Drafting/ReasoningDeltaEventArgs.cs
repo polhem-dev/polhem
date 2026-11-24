@@ -2,7 +2,7 @@ namespace Polhem.Definition.Drafting
 {
     /// <summary>
     /// A piece of the reasoning summary the model writes before it answers, raised as it arrives, for example by
-    /// <see cref="Rules.RuleDrafting.ReasoningDelta"/>.
+    /// <see cref="FormDraftSession.ReasoningDelta"/> and <see cref="Rules.RuleDrafting.ReasoningDelta"/>.
     /// </summary>
     public sealed class ReasoningDeltaEventArgs : EventArgs
     {

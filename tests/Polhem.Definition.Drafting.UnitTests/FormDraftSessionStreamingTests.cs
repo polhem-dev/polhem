@@ -32,6 +32,34 @@ namespace Polhem.Definition.Drafting.UnitTests
         }
 
         [Fact]
+        [DisplayName("Reasoning arrives in pieces after Thinking and before the reply, and joins into the summary Activity reports when the response ends")]
+        public async Task StartAsync_StreamedReasoning_RaisesPiecesThenTheWholeSummary()
+        {
+            var client = new ScriptedChatClient { TextPieceLength = 5 }
+                .Then(new TextReasoningContent("Read the form first.") { ProtectedData = "sig" }, Text("Drafted."));
+            var session = new FormDraftSession(client, new FakeDraftingHost());
+            var events = new List<string>();
+            var pieces = new System.Text.StringBuilder();
+            string? summary = null;
+            session.Activity += (_, e) =>
+            {
+                events.Add(e.Kind.ToString());
+                if (e.Kind == DraftActivityKind.Reasoning) summary = e.Detail;
+            };
+            session.ReasoningDelta += (_, e) => { events.Add("reasoning"); pieces.Append(e.Text); };
+            session.AssistantMessageDelta += (_, _) => events.Add("reply");
+
+            await session.StartAsync(s_document);
+
+            Assert.Equal("Thinking", events[0]);
+            Assert.Equal(4, events.Count(e => e == "reasoning"));
+            Assert.True(events.LastIndexOf("reasoning") < events.IndexOf("reply"));
+            Assert.True(events.IndexOf("reply") < events.IndexOf("Reasoning"));
+            Assert.Equal("Read the form first.", pieces.ToString());
+            Assert.Equal(pieces.ToString(), summary);
+        }
+
+        [Fact]
         [DisplayName("A turn that fails while a reply streams is removed as a whole, after its pieces were raised")]
         public async Task SendAsync_FailureAfterPieces_RestoresSessionState()
         {

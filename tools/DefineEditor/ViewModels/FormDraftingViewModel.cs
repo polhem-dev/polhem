@@ -31,6 +31,7 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     private readonly StringBuilder _streamText = new();
     private DraftChatEntry? _streaming;
     private bool _redrawPending;
+    private readonly StringBuilder _reasoningText = new();
     private FormDraftUsage? _turnUsage;
 
     /// <summary>
@@ -61,6 +62,7 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         CredentialText = credentialText;
         _session.AssistantMessage += OnAssistantMessage;
         _session.AssistantMessageDelta += OnAssistantMessageDelta;
+        _session.ReasoningDelta += OnReasoningDelta;
         _session.UsageChanged += OnUsageChanged;
         _session.DraftChanged += OnSessionDraftChanged;
         _session.Activity += OnSessionActivity;
@@ -242,6 +244,7 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         _cancellation?.Cancel();
         _session.AssistantMessage -= OnAssistantMessage;
         _session.AssistantMessageDelta -= OnAssistantMessageDelta;
+        _session.ReasoningDelta -= OnReasoningDelta;
         _session.UsageChanged -= OnUsageChanged;
         _session.DraftChanged -= OnSessionDraftChanged;
         _session.Activity -= OnSessionActivity;
@@ -309,6 +312,7 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
             Messages.Remove(_streaming);
         _streaming = null;
         _streamText.Clear();
+        _reasoningText.Clear();
         if (completed && _pendingQuestions is { } questions)
             Messages.Add(questions);
         _pendingQuestions = null;
@@ -339,10 +343,30 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
                 ShowStreamText();
                 return;
             }
-            if (_redrawPending) return;
-            _redrawPending = true;
-            _ = RedrawLaterAsync();
+            RedrawSoon();
         });
+
+    private void OnReasoningDelta(object? sender, ReasoningDeltaEventArgs e)
+        => Post(() =>
+        {
+            // The pieces belong to the card the request started in, even after a reply has streamed in below it.
+            if (_activity is null) return;
+            var first = _reasoningText.Length == 0;
+            _reasoningText.Append(e.Text);
+            if (first)
+                _activity.ShowReasoning(_reasoningText.ToString());
+            else
+                RedrawSoon();
+        });
+
+    // Gathers the pieces that arrive within one redraw interval: each redraw lays the text out again, and a reply's
+    // Markdown is parsed again.
+    private void RedrawSoon()
+    {
+        if (_redrawPending) return;
+        _redrawPending = true;
+        _ = RedrawLaterAsync();
+    }
 
     private async Task RedrawLaterAsync()
     {
@@ -351,6 +375,8 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         {
             _redrawPending = false;
             ShowStreamText();
+            if (_reasoningText.Length > 0)
+                _activity?.ShowReasoning(_reasoningText.ToString());
         });
     }
 
@@ -408,6 +434,8 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         {
             // A response's reasoning is reported once the response has ended, after its reply streamed in below the
             // card; it still belongs to the card the response started in.
+            if (e.Kind is DraftActivityKind.Thinking or DraftActivityKind.Reasoning)
+                _reasoningText.Clear();
             if (e.Kind == DraftActivityKind.Reasoning && _activity is not null)
             {
                 _activity.Apply(e);

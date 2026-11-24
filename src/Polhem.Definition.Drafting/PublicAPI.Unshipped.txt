@@ -36,3 +36,4 @@ Polhem.Definition.Drafting.ReasoningDeltaEventArgs.ReasoningDeltaEventArgs(strin
 Polhem.Definition.Drafting.ReasoningDeltaEventArgs.Text.get -> string!
 Polhem.Definition.Drafting.Rules.RuleDrafting.ReasoningDelta -> System.EventHandler<Polhem.Definition.Drafting.ReasoningDeltaEventArgs!>?
 Polhem.Definition.Drafting.Rules.RuleDrafting.ReplyDelta -> System.EventHandler<Polhem.Definition.Drafting.AssistantMessageDeltaEventArgs!>?
+Polhem.Definition.Drafting.FormDraftSession.ReasoningDelta -> System.EventHandler<Polhem.Definition.Drafting.ReasoningDeltaEventArgs!>?

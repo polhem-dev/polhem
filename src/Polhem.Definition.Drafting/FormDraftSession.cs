@@ -97,6 +97,16 @@ namespace Polhem.Definition.Drafting
         public event EventHandler<AssistantMessageDeltaEventArgs>? AssistantMessageDelta;
 
         /// <summary>
+        /// Occurs as the model's reasoning summary arrives, when the provider streams one (Claude does).
+        /// </summary>
+        /// <remarks>
+        /// The pieces after the <see cref="Activity"/> that reports <see cref="DraftActivityKind.Thinking"/> belong to that
+        /// request. Once its response has ended, <see cref="Activity"/> reports the whole summary as
+        /// <see cref="DraftActivityKind.Reasoning"/>.
+        /// </remarks>
+        public event EventHandler<ReasoningDeltaEventArgs>? ReasoningDelta;
+
+        /// <summary>
         /// Occurs when a call to the model begins, with <see cref="FormDraftUsage.Calls"/> counting it, and when it
         /// returns, with the tokens it reported added.
         /// </summary>
@@ -275,7 +285,7 @@ namespace Polhem.Definition.Drafting
             }
         }
 
-        // Streams one response, raising its text as it arrives, and returns it whole once it has ended.
+        // Streams one response, raising its reasoning and text as they arrive, and returns it whole once it has ended.
         private async Task<ChatResponse> StreamResponseAsync(ChatOptions options, CancellationToken cancellationToken)
         {
             var updates = new List<ChatResponseUpdate>();
@@ -283,8 +293,11 @@ namespace Polhem.Definition.Drafting
                 .ConfigureAwait(false))
             {
                 updates.Add(update);
+                if (update.Role is not null && update.Role != ChatRole.Assistant) continue;
+                foreach (var reasoning in update.Contents.OfType<TextReasoningContent>().Where(r => r.Text.Length > 0))
+                    ReasoningDelta?.Invoke(this, new ReasoningDeltaEventArgs(reasoning.Text));
                 var text = update.Text;
-                if (text.Length > 0 && (update.Role is null || update.Role == ChatRole.Assistant))
+                if (text.Length > 0)
                     AssistantMessageDelta?.Invoke(this, new AssistantMessageDeltaEventArgs(text));
             }
             return updates.ToChatResponse();

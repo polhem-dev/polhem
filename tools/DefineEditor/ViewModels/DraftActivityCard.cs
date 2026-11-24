@@ -30,6 +30,27 @@ public sealed partial class DraftActivityCard : DraftChatItem
     [ObservableProperty]
     private bool _isExpanded;
 
+    /// <summary>The longest tail of the reasoning <see cref="LiveReasoning"/> shows.</summary>
+    public const int LiveReasoningLength = 300;
+
+    /// <summary>
+    /// Gets the end of the reasoning the model is writing for the request in progress, shown under the title while the
+    /// card runs; empty once the response has ended, when the whole summary is one of the <see cref="Steps"/>.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLiveReasoning))]
+    private string _liveReasoning = string.Empty;
+
+    /// <summary>Gets whether there is reasoning in progress to show.</summary>
+    public bool HasLiveReasoning => LiveReasoning.Length > 0;
+
+    /// <summary>Shows the reasoning of the request in progress, while the card runs.</summary>
+    /// <param name="reasoning">The reasoning so far.</param>
+    public void ShowReasoning(string reasoning)
+    {
+        if (IsRunning) LiveReasoning = StreamedText.Tail(reasoning, LiveReasoningLength);
+    }
+
     /// <summary>Gets whether the card shows anything beyond its title; an empty card is removed when the turn ends.</summary>
     public bool HasSteps => Steps.Count > 0;
 
@@ -42,8 +63,10 @@ public sealed partial class DraftActivityCard : DraftChatItem
         {
             case DraftActivityKind.Thinking:
                 Title = L("DraftingStep_Thinking") + "…";
+                LiveReasoning = string.Empty;
                 break;
             case DraftActivityKind.Reasoning:
+                LiveReasoning = string.Empty;
                 Steps.Add(new DraftActivityStep(L("DraftingStep_Reasoning"), activity.Detail, IsError: false, IsReasoning: true));
                 break;
             case DraftActivityKind.ToolStarted:
@@ -67,6 +90,7 @@ public sealed partial class DraftActivityCard : DraftChatItem
     {
         IsRunning = false;
         IsExpanded = false;
+        LiveReasoning = string.Empty;
         Title = (completed, _toolSteps) switch
         {
             (true, 1) => L("DraftingStep_DoneOne"),

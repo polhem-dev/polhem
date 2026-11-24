@@ -15,7 +15,7 @@
 | 型別 | 用途 |
 |------|------|
 | `DocumentSource` | 把 PDF、影像與 Word 文件讀成第一則訊息的內容。Word 文件轉成 Markdown 文字（段落與表格），其他照原樣送出。`SupportedExtensions` 列出副檔名；`MaxDocumentBytes` 與 `MaxImageBytes` 是大小上限 |
-| `FormDraftSession` | 對話本身：`StartAsync` 送出文件，`SendAsync` 送出使用者的回覆，`ApplyUserEdit` 記錄使用者直接做的修改。發出 `DraftChanged`、`AssistantMessageDelta`（回覆的文字邊收邊送）、`AssistantMessage`（完整回覆）、`Activity`（一輪進行中的每次請求與工具呼叫）、`UsageChanged`（這一輪的呼叫次數與 tokens）與 `QuestionsAsked`；草稿通過所有檢查時 `IsReady` 變為 true |
+| `FormDraftSession` | 對話本身：`StartAsync` 送出文件，`SendAsync` 送出使用者的回覆，`ApplyUserEdit` 記錄使用者直接做的修改。發出 `DraftChanged`、`AssistantMessageDelta`（回覆的文字邊收邊送）、`AssistantMessage`（完整回覆）、`ReasoningDelta`（推理摘要邊收邊送）、`Activity`（一輪進行中的每次請求與工具呼叫）、`UsageChanged`（這一輪的呼叫次數與 tokens）與 `QuestionsAsked`；草稿通過所有檢查時 `IsReady` 變為 true |
 | `FormDraft` | 模型編輯的草稿：資料表、欄位、選項、關聯、清單顯示的欄位與選單位置。每個欄位保留它在文件中的原文 |
 | `FormDraftConverter` | 以確定性的方式把草稿轉成 `FormDraftResult`。未完成的草稿也能轉換，未定事項列為問題，ProgId 未定前使用 `PlaceholderProgId` |
 | `FormDraftResult` | `FormSchema`、依 `FormSchemaLocalizer` 讀取方式命名鍵值的 zh-TW 文字、選單位置、各欄位的原文，以及問題清單 |

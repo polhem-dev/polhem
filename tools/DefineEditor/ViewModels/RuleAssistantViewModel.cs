@@ -417,7 +417,7 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
             reply = _streamReply.ToString().Trim();
             reasoning = _streamReasoning.ToString().Trim();
         }
-        ThinkingText = reasoning.Length <= ThinkingTailLength ? reasoning : "…" + reasoning[^ThinkingTailLength..].TrimStart();
+        ThinkingText = StreamedText.Tail(reasoning, ThinkingTailLength);
         if (reply.Length > 0) Reply = reply;
     }
 
