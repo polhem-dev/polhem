@@ -8,7 +8,7 @@
              x:DataType="vm:RuleAssistantViewModel"
              x:CompileBindings="True">
     <Border BorderThickness="1" CornerRadius="4" Padding="10,8" BorderBrush="{DynamicResource SemiColorBorder}">
-        <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
+        <Grid x:Name="Rows" RowDefinitions="Auto,*,Auto,Auto,Auto">
             <StackPanel Grid.Row="0" Spacing="6" Margin="0,0,0,8">
                 <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Text="{Binding CredentialText}"/>
                 <WrapPanel>
@@ -21,7 +21,7 @@
             </StackPanel>
             <!-- The conversation: the first message asks for a rule, the next ones revise it. The view hands the prompts
                  and the stop button to the panel. -->
-            <Border Grid.Row="1" Classes="surface-sunken" CornerRadius="4" ClipToBounds="True" MinHeight="180">
+            <Border Grid.Row="1" Classes="surface-sunken" CornerRadius="4" ClipToBounds="True" MinHeight="140">
                 <chat:ChatView x:Name="Chat" Conversation="{Binding Conversation}" IsGenerating="{Binding IsBusy}"
                                IsEnabled="{Binding IsAvailable}"
                                PromptSubmitted="OnPromptSubmitted" StopRequested="OnStopRequested"/>
@@ -29,8 +29,9 @@
             <TextBlock Grid.Row="2" Text="{Binding UsageText}" TextWrapping="Wrap" Classes="muted" FontSize="11"
                        Margin="2,6,0,0"
                        IsVisible="{Binding UsageText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-            <!-- The drafted or explained rule: what it does, the engine's samples and the message to apply. -->
-            <ScrollViewer Grid.Row="3" Margin="0,8,0,0" MaxHeight="320" HorizontalScrollBarVisibility="Disabled"
+            <!-- The drafted or explained rule: what it does, the engine's samples and the message to apply. While there is
+                 one, it shares the height with the conversation (RuleAssistantPanel.axaml.cs). -->
+            <ScrollViewer Grid.Row="3" Margin="0,8,0,0" HorizontalScrollBarVisibility="Disabled"
                           IsVisible="{Binding HasResult}">
                 <StackPanel Spacing="8">
                     <md:MarkdownViewer Markdown="{Binding Explanation}"
