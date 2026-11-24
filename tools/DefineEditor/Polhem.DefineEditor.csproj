@@ -61,10 +61,10 @@
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
     <!-- Renders the model's replies in the drafting conversation (polhem-dev/polhem-markdown). An exact version, so a
          newer viewer arrives only through a change to this line. -->
-    <PackageReference Include="Polhem.Markdown.Avalonia" Version="[0.1.0]" />
+    <PackageReference Include="Polhem.Markdown.Avalonia" Version="[0.2.1]" />
     <!-- The conversation of the drafting window and of the rule assistant (polhem-dev/polhem-chat). The drafting sessions
          run their own tool loops and feed the conversation; the control only shows it. An exact version, as above. -->
-    <PackageReference Include="Polhem.Chat.Avalonia" Version="[0.1.1]" />
+    <PackageReference Include="Polhem.Chat.Avalonia" Version="[0.1.2]" />
   </ItemGroup>
 
   <ItemGroup>
