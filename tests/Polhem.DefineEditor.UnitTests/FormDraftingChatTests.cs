@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Extensions.AI;
 using Polhem.Chat;
-using Polhem.DefineEditor.Converters;
 using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.Definition.Drafting;
@@ -66,9 +65,13 @@ public sealed class FormDraftingChatTests
                 Assert.False(string.IsNullOrEmpty(call.ErrorMessage));
             },
             entry => Assert.Equal("Drafted.", Assert.IsType<AssistantReplyEntry>(entry).Text),
-            entry => Assert.Equal(TurnOutcome.Completed, Assert.IsType<TurnSummaryEntry>(entry).Outcome));
+            entry =>
+            {
+                var summary = Assert.IsType<TurnSummaryEntry>(entry);
+                Assert.Equal(TurnOutcome.Completed, summary.Outcome);
+                Assert.Equal(2, summary.Calls);
+            });
         Assert.False(viewModel.IsBusy);
-        Assert.False(viewModel.HasUsage);
     }
 
     [Fact]
@@ -287,7 +290,7 @@ public sealed class FormDraftingChatTests
     }
 
     [Fact]
-    [DisplayName("The turn's summary carries its input, cached and output tokens, and the progress line is cleared after it")]
+    [DisplayName("The turn's summary carries its input, cached and output tokens and the requests the session sent")]
     public async Task StartAsync_Turn_SummaryCarriesItsTokens()
     {
         var client = new ScriptedChatClient().Then((_, _) => new ChatResponse(new ChatMessage(ChatRole.Assistant, "Drafted."))
@@ -303,25 +306,7 @@ public sealed class FormDraftingChatTests
         Assert.Equal(2105, usage.OutputTokenCount);
         Assert.Equal(16000, usage.CachedInputTokenCount);
         Assert.Equal(1, session.LastTurnUsage.Calls);
-        Assert.False(viewModel.HasUsage);
-    }
-
-    [Fact]
-    [DisplayName("The summary line names the cached tokens only when there are some, leaves out tokens nobody reported, and says how the turn ended")]
-    public void TurnSummaryConverter_CachedNoneAndOutcome()
-    {
-        static string Line(UsageDetails? usage, TurnOutcome outcome = TurnOutcome.Completed)
-            => TurnSummaryConverter.Describe(new TurnSummaryEntry(TimeSpan.FromSeconds(30), usage, outcome));
-
-        var cached = Line(new UsageDetails { InputTokenCount = 18240, OutputTokenCount = 2105, CachedInputTokenCount = 16000 });
-        var uncached = Line(new UsageDetails { InputTokenCount = 18240, OutputTokenCount = 2105 });
-        var none = Line(usage: null, TurnOutcome.Stopped);
-
-        Assert.Contains("16,000", cached, StringComparison.Ordinal);
-        Assert.Contains("18,240", uncached, StringComparison.Ordinal);
-        Assert.DoesNotContain("16,000", uncached, StringComparison.Ordinal);
-        Assert.Equal(LocalizationService.Current["ChatSummary_Seconds"].Replace("{0}", "30", StringComparison.Ordinal)
-            + LocalizationService.Current["ChatSummary_Separator"] + LocalizationService.Current["ChatSummary_Stopped"], none);
+        Assert.Equal(1, Assert.IsType<TurnSummaryEntry>(viewModel.Conversation.Entries[^1]).Calls);
     }
 
     [Fact]

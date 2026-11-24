@@ -93,15 +93,16 @@ public sealed class DraftingChatFeed
     }
 
     /// <summary>
-    /// Marks the start of another request to the model within the turn. Its reasoning and its reply start new paragraphs
-    /// when nothing came between them and the previous request's.
+    /// Marks the start of a request to the model within the turn: the turn counts it, and its reasoning and its reply
+    /// start new paragraphs when nothing came between them and the previous request's.
     /// </summary>
     public void BeginRequest()
     {
         lock (_gate)
         {
-            if (_turn is null) return;
+            if (_turn is not { } turn) return;
             Flush();
+            turn.BeginCall();
             _separateNext = true;
         }
     }

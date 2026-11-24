@@ -44,10 +44,6 @@
                 <!-- The conversation. The session runs its own tool loop and feeds Conversation; the view shows it and
                      hands the prompts and the stop button to the window. -->
                 <DockPanel Grid.Column="0">
-                    <!-- Which call the turn in progress is on and the seconds so far; the turn's time and tokens show in
-                         the conversation once it ends. -->
-                    <TextBlock DockPanel.Dock="Bottom" Classes="muted" FontSize="12" Margin="2,6,0,0" TextWrapping="Wrap"
-                               Text="{Binding UsageText}" IsVisible="{Binding HasUsage}"/>
                     <Border Classes="surface-sunken" CornerRadius="4" ClipToBounds="True">
                         <chat:ChatView x:Name="Chat" Conversation="{Binding Conversation}" IsGenerating="{Binding IsBusy}"
                                        PromptSubmitted="OnPromptSubmitted" StopRequested="OnStopRequested">

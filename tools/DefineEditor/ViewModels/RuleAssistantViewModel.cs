@@ -38,9 +38,6 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     private bool _hasConversation;
     private bool _replyStreamed;
     private RuleDraftingUsage _reportedUsage = RuleDraftingUsage.None;
-    // Written by the drafting session's progress event, which may run on any thread, and read by the timer that updates
-    // the progress line on the UI thread.
-    private RuleDraftingProgress? _progress;
 
     /// <param name="schema">The form; it is read, never changed.</param>
     /// <param name="ruleId">The rule being edited. The model drafts against the form without it, so its id is free.</param>
@@ -102,13 +99,6 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExplainCommand), nameof(ApplyCommand), nameof(NewConversationCommand))]
     private bool _isBusy;
-
-    /// <summary>
-    /// While a request runs, which call to the model it is waiting for, or that it checks the submission, and for how
-    /// long; empty between requests, when the conversation shows the request's time and tokens.
-    /// </summary>
-    [ObservableProperty]
-    private string _usageText = string.Empty;
 
     /// <summary>What the drafted or explained rule does, in plain words.</summary>
     [ObservableProperty]
@@ -254,15 +244,10 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     private async Task RunAsync(string prompt, Func<RuleDrafting, CancellationToken, Task> request)
     {
         _cancellation = new CancellationTokenSource();
-        var clock = System.Diagnostics.Stopwatch.StartNew();
-        Volatile.Write(ref _progress, null);
         _replyStreamed = false;
         _reportedUsage = RuleDraftingUsage.None;
         _feed.Begin(prompt);
         IsBusy = true;
-        UsageText = DescribeProgress(clock.Elapsed);
-        using var ticking = new CancellationTokenSource();
-        _ = TickAsync(clock, ticking.Token);
         try
         {
             _client ??= _createClient();
@@ -288,40 +273,16 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
         }
         finally
         {
-            // NOTE: the ticker is cancelled, not awaited: awaiting it would add a real asynchronous hop at the end of
-            // every request (see FormDraftingViewModel.RunTurnAsync).
-            ticking.Cancel();
             // A result that did not end the turn (an exception thrown after it) still ends it here.
             _feed.Complete();
-            UsageText = string.Empty;
             _cancellation.Dispose();
             _cancellation = null;
             IsBusy = false;
         }
     }
 
-    // Runs on the UI thread, as the request does, so the progress line changes there.
-    private async Task TickAsync(System.Diagnostics.Stopwatch clock, CancellationToken cancellationToken)
-    {
-        try
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(500, cancellationToken);
-                // The request may have ended while the delay completed; its line must stay cleared.
-                if (cancellationToken.IsCancellationRequested) return;
-                UsageText = DescribeProgress(clock.Elapsed);
-            }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // The request ended; the caller clears the line.
-        }
-    }
-
     private void OnProgress(object? sender, RuleDraftingProgress e)
     {
-        Volatile.Write(ref _progress, e);
         Post(() =>
         {
             // Each call's tokens are reported when it returns; the conversation counts them for the request.
@@ -349,15 +310,6 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
             action();
         else
             _context.Post(_ => action(), null);
-    }
-
-    private string DescribeProgress(TimeSpan elapsed)
-    {
-        var progress = Volatile.Read(ref _progress);
-        var seconds = (int)elapsed.TotalSeconds;
-        return progress is null || progress.WaitingForModel
-            ? L("RuleAssistant_ProgressCalling", Math.Max(progress?.Usage.Calls ?? 1, 1), seconds)
-            : L("RuleAssistant_ProgressChecking", progress.Usage.Calls, seconds);
     }
 
     /// <summary>The drafted rule's table, When and Condition, one per line.</summary>

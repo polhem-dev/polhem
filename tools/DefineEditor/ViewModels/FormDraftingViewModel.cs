@@ -113,17 +113,6 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool _isPreviewViewMode;
 
-    /// <summary>
-    /// Gets which call to the model the turn in progress is on and the seconds so far; empty between turns, when the
-    /// conversation shows the turn's time and tokens.
-    /// </summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasUsage))]
-    private string _usageText = string.Empty;
-
-    /// <summary>Gets whether a turn is in progress to report on.</summary>
-    public bool HasUsage => UsageText.Length > 0;
-
     /// <summary>Gets whether the preview could not be drawn.</summary>
     public bool HasPreviewError => PreviewError.Length > 0;
 
@@ -239,10 +228,6 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         _turnUsage = FormDraftUsage.None;
         _feed.Begin(prompt);
         IsBusy = true;
-        var clock = System.Diagnostics.Stopwatch.StartNew();
-        UsageText = DescribeProgress(null, clock.Elapsed);
-        using var ticking = new CancellationTokenSource();
-        _ = TickAsync(clock, ticking.Token);
         try
         {
             await turn(cancellation.Token);
@@ -264,11 +249,6 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         {
             _cancellation = null;
             _pendingQuestions = null;
-            // NOTE: the ticker is cancelled, not awaited. Awaiting it adds a real asynchronous hop at the end of every turn,
-            // so the caller resumes after the turn off the thread that created this view-model, and a session event it
-            // causes next (DraftChanged after a field edit) is then posted instead of handled at once.
-            ticking.Cancel();
-            UsageText = string.Empty;
             IsBusy = false;
             RefreshDraft();
         }
@@ -332,32 +312,6 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
                     break;
             }
         });
-
-    // Runs on the thread that started the turn, as the turn does, so the progress line changes there.
-    private async Task TickAsync(System.Diagnostics.Stopwatch clock, CancellationToken cancellationToken)
-    {
-        try
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(500, cancellationToken);
-                // The turn may have ended while the delay completed; its line must stay cleared.
-                if (cancellationToken.IsCancellationRequested) return;
-                UsageText = DescribeProgress(_turnUsage, clock.Elapsed);
-            }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // The turn ended; the caller clears the line.
-        }
-    }
-
-    /// <summary>The call in progress and the seconds so far, while a turn runs.</summary>
-    /// <param name="usage">What the turn has cost so far, or <see langword="null"/> before its first call.</param>
-    /// <param name="elapsed">The time since the turn began.</param>
-    /// <returns>The line.</returns>
-    public static string DescribeProgress(FormDraftUsage? usage, TimeSpan elapsed)
-        => L("Drafting_UsageRunning", Math.Max(usage?.Calls ?? 1, 1), (int)elapsed.TotalSeconds);
 
     /// <summary>
     /// What a tool call does, such as "Setting up the field leave_type", from the tool's name and what it works on.

@@ -32,7 +32,7 @@ public partial class RuleAssistantPanel : UserControl
 
     // The result row takes no height until there is a result; then the conversation and the result share the panel.
     private void ShareHeight()
-        => Rows.RowDefinitions[3].Height = _assistant?.HasResult == true ? new GridLength(1.2, GridUnitType.Star) : GridLength.Auto;
+        => Rows.RowDefinitions[2].Height = _assistant?.HasResult == true ? new GridLength(1.2, GridUnitType.Star) : GridLength.Auto;
 
     private void OnPromptSubmitted(object? sender, PromptSubmittedEventArgs e)
     {

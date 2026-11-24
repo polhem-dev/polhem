@@ -558,14 +558,7 @@
   <data name="Drafting_ColumnRequired" xml:space="preserve"><value>必填</value></data>
   <data name="Drafting_ColumnRelation" xml:space="preserve"><value>關聯</value></data>
   <data name="Drafting_ColumnSource" xml:space="preserve"><value>文件原文</value></data>
-  <data name="ChatSummary_Seconds" xml:space="preserve"><value>{0} 秒</value></data>
-  <data name="ChatSummary_Tokens" xml:space="preserve"><value>輸入 {0} tokens・輸出 {1} tokens</value></data>
-  <data name="ChatSummary_TokensCached" xml:space="preserve"><value>輸入 {0} tokens（快取 {1}）・輸出 {2} tokens</value></data>
-  <data name="ChatSummary_Stopped" xml:space="preserve"><value>已停止</value></data>
-  <data name="ChatSummary_Failed" xml:space="preserve"><value>失敗</value></data>
-  <data name="ChatSummary_Separator" xml:space="preserve"><value>・</value></data>
   <data name="Drafting_SentDocuments" xml:space="preserve"><value>已送出 {0}。</value></data>
-  <data name="Drafting_UsageRunning" xml:space="preserve"><value>第 {0} 次呼叫・已 {1} 秒</value></data>
   <data name="Drafting_Stopped" xml:space="preserve"><value>已停止。草稿維持在這則訊息之前的狀態。</value></data>
   <data name="Drafting_TurnFailed" xml:space="preserve"><value>要求失敗：{0}
 草稿維持在這則訊息之前的狀態，可重送訊息再試一次。</value></data>
@@ -615,8 +608,6 @@
   <data name="Status_RuleMessagesWritten" xml:space="preserve"><value>規則 {0}：翻譯已寫入 {1}。</value></data>
   <data name="Status_RuleMessagesProblems" xml:space="preserve"><value>規則 {0}：{1}</value></data>
   <data name="RuleAssistant_NoResult" xml:space="preserve"><value>助手沒有完成。請重新描述規則，或再試一次。</value></data>
-  <data name="RuleAssistant_ProgressCalling" xml:space="preserve"><value>等待模型回應（第 {0} 次呼叫）・已 {1} 秒</value></data>
-  <data name="RuleAssistant_ProgressChecking" xml:space="preserve"><value>檢查提交的規則（第 {0} 次呼叫後）・已 {1} 秒</value></data>
   <data name="RuleAssistant_AllBlank" xml:space="preserve"><value>（所有欄位空白）</value></data>
   <data name="RuleDialog_AddTitle" xml:space="preserve"><value>新增規則</value></data>
   <data name="RuleDialog_EditTitle" xml:space="preserve"><value>規則 {0}</value></data>

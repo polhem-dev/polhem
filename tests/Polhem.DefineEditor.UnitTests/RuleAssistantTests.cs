@@ -152,7 +152,7 @@ public sealed class RuleAssistantTests : IDisposable
         Assert.True(assistant.HasDraft);
         Assert.Equal("金額超過 10 萬要有核准人", Assert.IsType<UserPromptEntry>(assistant.Conversation.Entries[0]).Text);
         Assert.Equal(TurnOutcome.Completed, Assert.IsType<TurnSummaryEntry>(assistant.Conversation.Entries[^1]).Outcome);
-        Assert.Empty(assistant.UsageText);
+        Assert.Equal(1, Assert.IsType<TurnSummaryEntry>(assistant.Conversation.Entries[^1]).Calls);
         Assert.Equal([RuleSampleOutcome.Blocked, RuleSampleOutcome.Passes, RuleSampleOutcome.Skipped],
             assistant.Samples.Select(s => s.Outcome));
         Assert.Contains("amount = 200000", assistant.Samples[0].Values, StringComparison.Ordinal);

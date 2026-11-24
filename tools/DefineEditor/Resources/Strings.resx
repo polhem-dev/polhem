@@ -571,14 +571,7 @@ The requests are charged to the Claude Console organization of this credential.<
   <data name="Drafting_ColumnRequired" xml:space="preserve"><value>Required</value></data>
   <data name="Drafting_ColumnRelation" xml:space="preserve"><value>Relation</value></data>
   <data name="Drafting_ColumnSource" xml:space="preserve"><value>From the Document</value></data>
-  <data name="ChatSummary_Seconds" xml:space="preserve"><value>{0} s</value></data>
-  <data name="ChatSummary_Tokens" xml:space="preserve"><value>{0} input tokens · {1} output tokens</value></data>
-  <data name="ChatSummary_TokensCached" xml:space="preserve"><value>{0} input tokens ({1} cached) · {2} output tokens</value></data>
-  <data name="ChatSummary_Stopped" xml:space="preserve"><value>Stopped</value></data>
-  <data name="ChatSummary_Failed" xml:space="preserve"><value>Failed</value></data>
-  <data name="ChatSummary_Separator" xml:space="preserve"><value> · </value></data>
   <data name="Drafting_SentDocuments" xml:space="preserve"><value>Sent {0}.</value></data>
-  <data name="Drafting_UsageRunning" xml:space="preserve"><value>Call {0} · {1} s</value></data>
   <data name="Drafting_Stopped" xml:space="preserve"><value>Stopped. The draft is as it was before this message.</value></data>
   <data name="Drafting_TurnFailed" xml:space="preserve"><value>The request failed: {0}
 The draft is as it was before this message; send it again to retry.</value></data>
@@ -628,8 +621,6 @@ The draft is as it was before this message; send it again to retry.</value></dat
   <data name="Status_RuleMessagesWritten" xml:space="preserve"><value>Rule {0}: translations written to {1}.</value></data>
   <data name="Status_RuleMessagesProblems" xml:space="preserve"><value>Rule {0}: {1}</value></data>
   <data name="RuleAssistant_NoResult" xml:space="preserve"><value>The assistant did not finish. Describe the rule again, or try once more.</value></data>
-  <data name="RuleAssistant_ProgressCalling" xml:space="preserve"><value>Waiting for the model (call {0}) · {1} s</value></data>
-  <data name="RuleAssistant_ProgressChecking" xml:space="preserve"><value>Checking the submission (after call {0}) · {1} s</value></data>
   <data name="RuleAssistant_AllBlank" xml:space="preserve"><value>(every field blank)</value></data>
   <data name="RuleDialog_AddTitle" xml:space="preserve"><value>Add Rule</value></data>
   <data name="RuleDialog_EditTitle" xml:space="preserve"><value>Rule {0}</value></data>

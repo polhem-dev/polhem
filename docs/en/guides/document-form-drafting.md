@@ -76,7 +76,7 @@ The conversation window opens, and Claude's first draft appears in it when Claud
 
 | Part | What it shows |
 |------|---------------|
-| Left | The conversation. While Claude works, its reasoning and each step ("Setting up the field leave_type") appear as they happen; click one to see its details. The line under the conversation says which call to Claude the turn is on and for how long, and each turn ends with its time and tokens. Type your answer and press Enter (Shift+Enter for a new line; the Enter that confirms an input method's composition does not send); **Stop** or Esc cancels the current reply and leaves the draft as it was before your message |
+| Left | The conversation. While Claude works, its reasoning and each step ("Setting up the field leave_type") appear as they happen; click one to see its details. While a turn runs, the conversation shows which request to Claude it is on and for how long, and each turn ends with its time, requests and tokens. Type your answer and press Enter (Shift+Enter for a new line; the Enter that confirms an input method's composition does not send); **Stop** or Esc cancels the current reply and leaves the draft as it was before your message |
 | **Form** tab | The form as it will look, redrawn after each change. The buttons above it switch to view mode and to phone width. Clicking a field opens it in the **Fields** tab |
 | **Fields** tab | Every field of every table: name, captions, type, length, required, relation, and the text of the document it came from. Edit a cell to change the draft directly; Claude is told what you changed with your next message |
 | **Questions** tab | What is still open: missing values, relations to confirm, validation errors. An error keeps the form from being created |

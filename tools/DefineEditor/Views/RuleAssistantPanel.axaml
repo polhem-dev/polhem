@@ -8,7 +8,7 @@
              x:DataType="vm:RuleAssistantViewModel"
              x:CompileBindings="True">
     <Border BorderThickness="1" CornerRadius="4" Padding="10,8" BorderBrush="{DynamicResource SemiColorBorder}">
-        <Grid x:Name="Rows" RowDefinitions="Auto,*,Auto,Auto,Auto">
+        <Grid x:Name="Rows" RowDefinitions="Auto,*,Auto,Auto">
             <StackPanel Grid.Row="0" Spacing="6" Margin="0,0,0,8">
                 <TextBlock Classes="muted" FontSize="11" TextWrapping="Wrap" Text="{Binding CredentialText}"/>
                 <WrapPanel>
@@ -26,12 +26,9 @@
                                IsEnabled="{Binding IsAvailable}"
                                PromptSubmitted="OnPromptSubmitted" StopRequested="OnStopRequested"/>
             </Border>
-            <TextBlock Grid.Row="2" Text="{Binding UsageText}" TextWrapping="Wrap" Classes="muted" FontSize="11"
-                       Margin="2,6,0,0"
-                       IsVisible="{Binding UsageText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
             <!-- The drafted or explained rule: what it does, the engine's samples and the message to apply. While there is
                  one, it shares the height with the conversation (RuleAssistantPanel.axaml.cs). -->
-            <ScrollViewer Grid.Row="3" Margin="0,8,0,0" HorizontalScrollBarVisibility="Disabled"
+            <ScrollViewer Grid.Row="2" Margin="0,8,0,0" HorizontalScrollBarVisibility="Disabled"
                           IsVisible="{Binding HasResult}">
                 <StackPanel Spacing="8">
                     <md:MarkdownViewer Markdown="{Binding Explanation}"
@@ -81,7 +78,7 @@
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
-            <Button Grid.Row="4" Classes="tool Primary" HorizontalAlignment="Right" Margin="0,8,0,0"
+            <Button Grid.Row="3" Classes="tool Primary" HorizontalAlignment="Right" Margin="0,8,0,0"
                     Command="{Binding ApplyCommand}" IsVisible="{Binding HasDraft}"
                     Content="{loc:Loc RuleAssistant_Apply}" ToolTip.Tip="{loc:Loc RuleAssistant_ApplyTip}"/>
         </Grid>
