@@ -44,7 +44,7 @@ public sealed class DraftingChatFeedTests
     }
 
     [Fact]
-    [DisplayName("A tool shows with its title while it runs, completes, or fails with the reason it was refused")]
+    [DisplayName("A tool shows with its title while it runs, completes, or is rejected with the reason it was refused")]
     public void StartAndEndTool_ShowsStatusAndRefusal()
     {
         var feed = Create();
@@ -60,8 +60,29 @@ public sealed class DraftingChatFeedTests
         feed.StartTool("remove_field", "missing");
         feed.EndTool("There is no field 'missing'.");
         var refused = Assert.IsType<ToolCallEntry>(feed.Conversation.Entries[^1]);
-        Assert.Equal(ToolCallStatus.Failed, refused.Status);
-        Assert.Equal("There is no field 'missing'.", refused.ErrorMessage);
+        Assert.Equal(ToolCallStatus.Rejected, refused.Status);
+        Assert.Equal("There is no field 'missing'.", refused.RejectionReason);
+        Assert.Null(refused.ErrorMessage);
+    }
+
+    [Fact]
+    [DisplayName("An entry added during a turn ends the reply above it, and the turn's summary comes after it")]
+    public void AddEntry_DuringTurn_EndsTheReplyAndPrecedesTheSummary()
+    {
+        var feed = Create();
+        var card = new ErrorEntry("card");
+        feed.Begin("Hi");
+        feed.AppendReply("Before.");
+
+        feed.AddEntry(card);
+        feed.AppendReply("After.");
+        feed.Complete();
+
+        var entries = feed.Conversation.Entries;
+        Assert.Equal("Before.", Assert.IsType<AssistantReplyEntry>(entries[1]).Text);
+        Assert.Same(card, entries[2]);
+        Assert.Equal("After.", Assert.IsType<AssistantReplyEntry>(entries[3]).Text);
+        Assert.IsType<TurnSummaryEntry>(entries[4]);
     }
 
     [Fact]

@@ -146,7 +146,7 @@ public sealed class DraftingChatFeed
 
     /// <summary>Ends the tool that is running.</summary>
     /// <param name="refusal">
-    /// Why the tool refused its input, or <see langword="null"/> when it ran. A refused tool shows as failed, with the
+    /// Why the tool refused its input, or <see langword="null"/> when it ran. A refused tool shows as rejected, with the
     /// reason: the model reads it and usually calls the tool again.
     /// </param>
     public void EndTool(string? refusal)
@@ -155,14 +155,31 @@ public sealed class DraftingChatFeed
         {
             if (_turn is not { } turn || _callId.Length == 0) return;
             Flush();
-            // NOTE: the exception only carries the reason to the tool call's entry; nothing throws it. Polhem.Chat 0.1 has
-            // no status for a refused call, so it shows as failed.
-            var result = new FunctionResultContent(_callId, result: null)
+            // The session refused the call itself, so it did not fail: it shows as rejected. The entry keeps that state
+            // when the result arrives.
+            if (refusal is not null && FindToolCall(_callId) is { } entry)
             {
-                Exception = refusal is null ? null : new InvalidOperationException(refusal),
-            };
-            turn.Apply(new ChatResponseUpdate(ChatRole.Tool, [result]));
+                entry.RejectionReason = refusal;
+                entry.Status = ToolCallStatus.Rejected;
+            }
+            turn.Apply(new ChatResponseUpdate(ChatRole.Tool, [new FunctionResultContent(_callId, result: null)]));
             _callId = string.Empty;
+            _replyOpen = false;
+        }
+    }
+
+    /// <summary>
+    /// Adds an entry of the application's own while the turn is in progress, such as the questions the model asked. The
+    /// reply before it ends, so text that arrives later starts a reply of its own.
+    /// </summary>
+    public void AddEntry(ChatEntry entry)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+        lock (_gate)
+        {
+            if (_turn is not { } turn) return;
+            Flush();
+            turn.AddEntry(entry);
             _replyOpen = false;
         }
     }
@@ -194,7 +211,7 @@ public sealed class DraftingChatFeed
             if (_turn is not { } turn) return;
             Flush();
             foreach (var entry in entries)
-                Conversation.Entries.Add(entry);
+                turn.AddEntry(entry);
             turn.Complete();
             _turn = null;
         }
@@ -227,6 +244,16 @@ public sealed class DraftingChatFeed
                 : new InvalidOperationException(message, exception));
             _turn = null;
         }
+    }
+
+    private ToolCallEntry? FindToolCall(string callId)
+    {
+        for (var i = Conversation.Entries.Count - 1; i >= 0; i--)
+        {
+            if (Conversation.Entries[i] is ToolCallEntry call && string.Equals(call.CallId, callId, StringComparison.Ordinal))
+                return call;
+        }
+        return null;
     }
 
     // Must be called under the gate.

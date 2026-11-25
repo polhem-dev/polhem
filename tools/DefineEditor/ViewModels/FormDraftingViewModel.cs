@@ -231,9 +231,10 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         try
         {
             await turn(cancellation.Token);
-            // A turn that failed loses its questions: the session no longer holds them. They show last, where the user
-            // answers them.
-            _feed.Complete(_pendingQuestions is { } questions ? [questions] : []);
+            _feed.Complete();
+            // The questions show where the model asked them, and take answers once the turn has ended. A turn that failed
+            // or was stopped leaves them closed: the session no longer holds them.
+            _pendingQuestions?.Open();
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
@@ -328,7 +329,12 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     }
 
     private void OnSessionQuestionsAsked(object? sender, DraftQuestionsEventArgs e)
-        => Post(() => _pendingQuestions = new DraftQuestionCard(e.Questions, SubmitAnswers));
+        => Post(() =>
+        {
+            var card = new DraftQuestionCard(e.Questions, SubmitAnswers, isOpen: false);
+            _pendingQuestions = card;
+            _feed.AddEntry(card);
+        });
 
     private void OnSessionDraftChanged(object? sender, EventArgs e)
         => Post(() =>
