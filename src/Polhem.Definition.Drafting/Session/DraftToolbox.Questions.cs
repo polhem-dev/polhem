@@ -30,10 +30,10 @@ namespace Polhem.Definition.Drafting.Session
                 asked.Add(CheckQuestion(questions[i], i + 1));
 
             AskedQuestions = asked;
-            return $"The {(asked.Count == 1 ? "question is" : "questions are")} shown to the user below your reply, with the "
-                + "options to choose from. Their answers arrive in their next message. Do not call more tools in this turn: "
-                + "end it with a short reply that first says what you changed in this turn, if anything, and do not repeat "
-                + "the questions in it.";
+            return $"The {(asked.Count == 1 ? "question is" : "questions are")} shown to the user, with the options to "
+                + "choose from. Their answers arrive in their next message. Do not call more tools in this turn: end it with "
+                + "a short reply that first says what you changed in this turn, if anything, and do not repeat the questions "
+                + "in it or say where they are shown.";
         }
 
         private static DraftQuestion CheckQuestion(AskUserQuestion question, int number)

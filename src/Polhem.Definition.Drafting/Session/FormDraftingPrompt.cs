@@ -38,8 +38,9 @@ namespace Polhem.Definition.Drafting.Session
                such as "Which ProgId should the form use?" with the options LeaveRequest and LeaveApplication. After
                ask_user, end the turn with a short reply: first what you changed in this turn, as a short list when it is
                more than one thing, and when the user asked for something that was already so, say that it was; then one
-               sentence pointing to the questions below. The answers arrive in the user's next message. Apply them with
-               the tools.
+               sentence saying that the questions wait for the user's answers. The application decides where it shows the
+               questions, so do not say where they are, such as above or below. The answers arrive in the user's next
+               message. Apply them with the tools.
             3. Finish. When validate_draft reports no errors and the user has nothing to add, call mark_ready.
 
             Conventions:

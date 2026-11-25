@@ -285,7 +285,7 @@ public sealed class FormDraftingTests : IDisposable
             .Then(Text("The draft is ready."));
         var host = new DefineEditorDraftHost(_solution, _define);
         FormDraftResult? imported = null;
-        var viewModel = new FormDraftingViewModel(new FormDraftSession(client, host), host, _define, "leave.pdf", "test",
+        var viewModel = new FormDraftingViewModel(new FormDraftSession(client, host), host, _define, "leave.pdf", () => "test",
             result =>
             {
                 imported = result;
@@ -320,7 +320,7 @@ public sealed class FormDraftingTests : IDisposable
             .Then(Text("Noted."));
         var host = new DefineEditorDraftHost(_solution, _define);
         var session = new FormDraftSession(client, host);
-        var viewModel = new FormDraftingViewModel(session, host, _define, "leave.pdf", "test", _ => Task.FromResult(false));
+        var viewModel = new FormDraftingViewModel(session, host, _define, "leave.pdf", () => "test", _ => Task.FromResult(false));
         await viewModel.StartAsync([Text("a scanned leave request")]);
         Assert.True(viewModel.IsReady);
 
@@ -340,7 +340,7 @@ public sealed class FormDraftingTests : IDisposable
     {
         var client = new ScriptedChatClient().Then((_, _) => throw new HttpRequestException("network down"));
         var host = new DefineEditorDraftHost(_solution, _define);
-        var viewModel = new FormDraftingViewModel(new FormDraftSession(client, host), host, _define, "leave.pdf", "test",
+        var viewModel = new FormDraftingViewModel(new FormDraftSession(client, host), host, _define, "leave.pdf", () => "test",
             _ => Task.FromResult(false));
 
         await viewModel.StartAsync([Text("a scanned leave request")]);
@@ -359,7 +359,7 @@ public sealed class FormDraftingTests : IDisposable
             .Then(Call("1", "upsert_field", """{"table":"master","fieldName":"Leave Type","caption":"Leave Type"}"""))
             .Then(Text("Drafted."));
         var host = new DefineEditorDraftHost(_solution, _define);
-        var viewModel = new FormDraftingViewModel(new FormDraftSession(client, host), host, _define, "leave.pdf", "test",
+        var viewModel = new FormDraftingViewModel(new FormDraftSession(client, host), host, _define, "leave.pdf", () => "test",
             _ => Task.FromResult(false));
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
@@ -379,7 +379,7 @@ public sealed class FormDraftingTests : IDisposable
                 Call("3", "set_relation", """{"table":"master","fieldName":"deputy_rowid","progId":"Employee","confidence":0.5,"reason":"A person."}"""))
             .Then(Text("Is the deputy an employee?"));
         var host = new DefineEditorDraftHost(_solution, _define);
-        var viewModel = new FormDraftingViewModel(new FormDraftSession(client, host), host, _define, "leave.pdf", "test",
+        var viewModel = new FormDraftingViewModel(new FormDraftSession(client, host), host, _define, "leave.pdf", () => "test",
             _ => Task.FromResult(false));
 
         await viewModel.StartAsync([Text("a scanned leave request")]);

@@ -78,7 +78,8 @@ public partial class MainWindowViewModel
         var session = new FormDraftSession(chatClient, host,
             new FormDraftingOptions { ReplyCulture = LocalizationService.Current.Culture, MarkdownReplies = true });
         var documentsLabel = string.Join(", ", documentPaths.Select(Path.GetFileName));
-        var viewModel = new FormDraftingViewModel(session, host, SolutionPath, documentsLabel, credential.Description,
+        var viewModel = new FormDraftingViewModel(session, host, SolutionPath, documentsLabel,
+            () => (DraftingCredentialProvider?.Invoke() ?? DraftingChatClients.DescribeCredential(provider)).Description,
             result => ImportDraftedFormAsync(result, documentsLabel));
 
         if (owner is null)
