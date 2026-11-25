@@ -120,6 +120,28 @@ namespace Polhem.Definition.Drafting.UnitTests
         }
 
         [Fact]
+        [DisplayName("Neither the instructions nor the result of ask_user say where the questions are shown: the application decides")]
+        public async Task AskUser_InstructionsAndResult_DoNotPlaceTheQuestions()
+        {
+            var client = new ScriptedChatClient()
+                .Then(Call("1", "ask_user", TwoQuestions))
+                .Then(Text("Please answer the questions."));
+            var session = new FormDraftSession(client, new FakeDraftingHost());
+
+            await session.StartAsync(s_document);
+
+            var instructions = session.History[0].Text;
+            var result = client.Requests[1].Messages[^1].Contents.OfType<FunctionResultContent>().Single().Result?.ToString();
+            foreach (var text in new[] { instructions, result })
+            {
+                Assert.DoesNotContain("questions below", text, StringComparison.Ordinal);
+                Assert.DoesNotContain("below your reply", text, StringComparison.Ordinal);
+            }
+            Assert.Contains("do not say where they are", instructions, StringComparison.Ordinal);
+            Assert.Contains("say where they are shown", result, StringComparison.Ordinal);
+        }
+
+        [Fact]
         [DisplayName("The instructions ask the reply that ends a turn with questions to say first what was changed")]
         public void Instructions_AfterAskUser_ReplySaysWhatChanged()
         {

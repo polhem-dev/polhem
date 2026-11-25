@@ -25,6 +25,7 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     private readonly IFormDraftingHost _host;
     private readonly string _definePath;
     private readonly Func<FormDraftResult, Task<bool>> _import;
+    private readonly Func<string> _describeCredential;
     private readonly SynchronizationContext? _context;
     private readonly DraftingChatFeed _feed;
     private CancellationTokenSource? _cancellation;
@@ -36,13 +37,17 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     /// <param name="host">The checks the session's host runs, listed in the Questions tab with the conversion's own.</param>
     /// <param name="definePath">The definition folder the form will be imported into.</param>
     /// <param name="documentsLabel">The documents being drafted from, as the window title shows them.</param>
-    /// <param name="credentialText">Which credential the requests use, shown so a forgotten API key is noticed.</param>
+    /// <param name="describeCredential">
+    /// Describes which credential the requests use, in the interface language, shown so a forgotten API key is noticed. It
+    /// is asked again when the language changes.
+    /// </param>
     /// <param name="import">Imports the converted draft and returns whether files were written; the caller closes the window.</param>
-    public FormDraftingViewModel(FormDraftSession session, IFormDraftingHost host, string definePath, string documentsLabel, string credentialText,
+    public FormDraftingViewModel(FormDraftSession session, IFormDraftingHost host, string definePath, string documentsLabel, Func<string> describeCredential,
         Func<FormDraftResult, Task<bool>> import)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(host);
+        ArgumentNullException.ThrowIfNull(describeCredential);
         ArgumentNullException.ThrowIfNull(import);
         _session = session;
         _host = host;
@@ -51,7 +56,7 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         _context = SynchronizationContext.Current;
         _feed = new DraftingChatFeed(DescribeTool, Post, DraftingChatFeed.DefaultRedrawInterval);
         DocumentsLabel = documentsLabel;
-        CredentialText = credentialText;
+        _describeCredential = describeCredential;
         _session.AssistantMessage += OnAssistantMessage;
         _session.AssistantMessageDelta += OnAssistantMessageDelta;
         _session.ReasoningDelta += OnReasoningDelta;
@@ -59,6 +64,7 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         _session.DraftChanged += OnSessionDraftChanged;
         _session.Activity += OnSessionActivity;
         _session.QuestionsAsked += OnSessionQuestionsAsked;
+        LocalizationService.Current.CultureChanged += OnCultureChanged;
     }
 
     /// <summary>Occurs after the draft changed; the window redraws the preview once the changes pause.</summary>
@@ -67,8 +73,8 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
     /// <summary>Gets the documents being drafted from.</summary>
     public string DocumentsLabel { get; }
 
-    /// <summary>Gets which credential the requests use.</summary>
-    public string CredentialText { get; }
+    /// <summary>Gets which credential the requests use, in the interface language.</summary>
+    public string CredentialText => _describeCredential();
 
     /// <summary>Gets the conversation, as the chat view shows it.</summary>
     public ChatConversation Conversation => _feed.Conversation;
@@ -218,6 +224,14 @@ public sealed partial class FormDraftingViewModel : ViewModelBase, IDisposable
         _session.DraftChanged -= OnSessionDraftChanged;
         _session.Activity -= OnSessionActivity;
         _session.QuestionsAsked -= OnSessionQuestionsAsked;
+        LocalizationService.Current.CultureChanged -= OnCultureChanged;
+    }
+
+    // The texts the view binds to, rather than takes from a resource, are built in the language of the moment.
+    private void OnCultureChanged(object? sender, CultureInfo culture)
+    {
+        OnPropertyChanged(nameof(CredentialText));
+        OnPropertyChanged(nameof(IssuesTabTitle));
     }
 
     private async Task RunTurnAsync(string prompt, Func<CancellationToken, Task> turn)

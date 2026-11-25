@@ -35,7 +35,7 @@ public sealed class FormDraftingChatTests
     {
         var host = new FakeDraftingHost();
         session = new FormDraftSession(client, host);
-        return new FormDraftingViewModel(session, host, Path.GetTempPath(), "leave.pdf", "test", _ => Task.FromResult(false));
+        return new FormDraftingViewModel(session, host, Path.GetTempPath(), "leave.pdf", () => "test", _ => Task.FromResult(false));
     }
 
     [Fact]

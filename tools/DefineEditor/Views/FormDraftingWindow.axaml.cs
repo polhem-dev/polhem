@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -8,6 +9,7 @@ using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Polhem.Chat.Avalonia;
+using Polhem.DefineEditor.Services;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.Definition.Layouts;
 using Polhem.UI.Avalonia.Controls;
@@ -40,6 +42,7 @@ public partial class FormDraftingWindow : Window
         // Tunnelling, and with handled events too, so a field editor still takes its own click afterwards.
         PreviewSheet.AddHandler(PointerPressedEvent, OnPreviewPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         ChatLanguage.Follow(Chat, "Drafting_InputWatermark");
+        LocalizationService.Current.CultureChanged += OnCultureChanged;
     }
 
     /// <summary>Opens the window over <paramref name="owner"/>.</summary>
@@ -57,6 +60,7 @@ public partial class FormDraftingWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _renderTimer.Stop();
+        LocalizationService.Current.CultureChanged -= OnCultureChanged;
         if (_viewModel is not null)
         {
             _viewModel.DraftChanged -= OnDraftChanged;
@@ -64,6 +68,13 @@ public partial class FormDraftingWindow : Window
         }
         base.OnClosed(e);
     }
+
+    // WARNING: Under the Semi theme, a tab whose header grows keeps its old width, and its text is cut off, when another
+    // element of the window changes size in the same layout pass: the tab strip's panel takes the new sizes but does not
+    // arrange its tabs again. A change of language does both at once, since the window's heading changes too. Arranging
+    // the panel again once that pass is over gives the tabs their new widths. The simple theme does not show it.
+    private void OnCultureChanged(object? sender, CultureInfo culture)
+        => Dispatcher.UIThread.Post(() => DraftTabs.ItemsPanelRoot?.InvalidateMeasure(), DispatcherPriority.Background);
 
     private void OnDraftChanged(object? sender, EventArgs e)
     {

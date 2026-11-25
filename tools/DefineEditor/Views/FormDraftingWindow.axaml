@@ -116,7 +116,7 @@
                 <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent"/>
 
                 <!-- The form as it stands. -->
-                <TabControl Grid.Column="2" SelectedIndex="{Binding SelectedTabIndex}" Padding="0,8,0,0">
+                <TabControl x:Name="DraftTabs" Grid.Column="2" SelectedIndex="{Binding SelectedTabIndex}" Padding="0,8,0,0">
                     <TabItem Header="{loc:Loc Drafting_TabForm}" AutomationProperties.Name="{loc:Loc Drafting_TabForm}">
                         <DockPanel>
                             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="2" HorizontalAlignment="Right"
