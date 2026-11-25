@@ -19,13 +19,18 @@ public sealed partial class DraftQuestionCard : ChatEntry
     /// <summary>Initializes a new instance of the <see cref="DraftQuestionCard"/> class.</summary>
     /// <param name="questions">The questions the model asked.</param>
     /// <param name="submit">Sends the composed answers as the user's message.</param>
-    public DraftQuestionCard(IReadOnlyList<DraftQuestion> questions, Action<string> submit)
+    /// <param name="isOpen">
+    /// Whether the card takes answers at once; <see langword="false"/> while the turn that asked is still in progress,
+    /// until <see cref="Open"/>.
+    /// </param>
+    public DraftQuestionCard(IReadOnlyList<DraftQuestion> questions, Action<string> submit, bool isOpen = true)
     {
         ArgumentNullException.ThrowIfNull(questions);
         ArgumentNullException.ThrowIfNull(submit);
         _submit = submit;
         foreach (var question in questions)
             Questions.Add(new DraftQuestionItem(this, question));
+        IsOpen = isOpen;
     }
 
     /// <summary>Gets the questions.</summary>
@@ -37,7 +42,10 @@ public sealed partial class DraftQuestionCard : ChatEntry
     /// <summary>Gets whether any question has an option the model suggests.</summary>
     public bool HasRecommendations => Questions.Any(q => q.Recommended is not null);
 
-    /// <summary>Gets whether the card still takes answers: until they are sent, or the user replies some other way.</summary>
+    /// <summary>
+    /// Gets whether the card takes answers: from when the turn that asked has ended until they are sent, or the user replies
+    /// some other way.
+    /// </summary>
     public bool IsOpen
     {
         get;
@@ -50,6 +58,9 @@ public sealed partial class DraftQuestionCard : ChatEntry
                 question.NotifyOpenChanged();
         }
     } = true;
+
+    /// <summary>Starts taking answers, once the turn that asked has ended.</summary>
+    public void Open() => IsOpen = true;
 
     /// <summary>Stops taking answers, because the user replied in the conversation instead.</summary>
     public void Close() => IsOpen = false;

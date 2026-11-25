@@ -39,7 +39,7 @@ public sealed class FormDraftingChatTests
     }
 
     [Fact]
-    [DisplayName("A turn's tool calls show in the conversation before the reply, with the editor's titles; a refused one fails with the reason")]
+    [DisplayName("A turn's tool calls show in the conversation before the reply, with the editor's titles; a refused one is rejected with the reason")]
     public async Task StartAsync_ToolCalls_ShowBeforeTheReply()
     {
         var client = new ScriptedChatClient()
@@ -61,8 +61,8 @@ public sealed class FormDraftingChatTests
             entry =>
             {
                 var call = Assert.IsType<ToolCallEntry>(entry);
-                Assert.Equal(ToolCallStatus.Failed, call.Status);
-                Assert.False(string.IsNullOrEmpty(call.ErrorMessage));
+                Assert.Equal(ToolCallStatus.Rejected, call.Status);
+                Assert.False(string.IsNullOrEmpty(call.RejectionReason));
             },
             entry => Assert.Equal("Drafted.", Assert.IsType<AssistantReplyEntry>(entry).Text),
             entry =>
@@ -87,7 +87,7 @@ public sealed class FormDraftingChatTests
     }
 
     [Fact]
-    [DisplayName("The questions the model asked show after its reply; clicking an option of a single question sends it and closes the card")]
+    [DisplayName("The questions the model asked show where it asked them, before its reply; once the turn ends, clicking an option of a single question sends it and closes the card")]
     public async Task QuestionCard_SingleQuestion_ClickSendsTheAnswer()
     {
         var client = new ScriptedChatClient()
@@ -98,9 +98,11 @@ public sealed class FormDraftingChatTests
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
         var entries = viewModel.Conversation.Entries;
-        var card = Assert.IsType<DraftQuestionCard>(entries[^2]);
-        Assert.IsType<AssistantReplyEntry>(entries[^3]);
+        Assert.Equal("ask_user", Assert.IsType<ToolCallEntry>(entries[^4]).Name);
+        var card = Assert.IsType<DraftQuestionCard>(entries[^3]);
+        Assert.IsType<AssistantReplyEntry>(entries[^2]);
         Assert.IsType<TurnSummaryEntry>(entries[^1]);
+        Assert.True(card.IsOpen);
         var question = Assert.Single(card.Questions);
         Assert.True(question.Choices[0].IsRecommended);
         question.Choices[1].SelectCommand.Execute(null);
@@ -109,6 +111,27 @@ public sealed class FormDraftingChatTests
         Assert.False(question.Choices[0].IsOpen);
         Assert.Equal("LeaveApplication", client.Requests[^1].Messages[^1].Text);
         Assert.Contains(viewModel.Conversation.Entries, entry => entry is UserPromptEntry { Text: "LeaveApplication" });
+    }
+
+    [Fact]
+    [DisplayName("The question card shows while the turn that asked is still in progress, and takes no answers until it ends")]
+    public async Task QuestionCard_DuringTurn_ShowsButTakesNoAnswers()
+    {
+        FormDraftingViewModel? viewModel = null;
+        bool? openDuringTurn = null;
+        var client = new ScriptedChatClient()
+            .Then(Call("1", "ask_user", OneQuestion))
+            .Then((_, _) =>
+            {
+                openDuringTurn = viewModel!.Conversation.Entries.OfType<DraftQuestionCard>().Single().IsOpen;
+                return new ChatResponse(new ChatMessage(ChatRole.Assistant, "Please choose."));
+            });
+        viewModel = CreateViewModel(client, out _);
+
+        await viewModel.StartAsync([Text("a scanned leave request")]);
+
+        Assert.False(openDuringTurn);
+        Assert.True(Assert.Single(viewModel.Conversation.Entries.OfType<DraftQuestionCard>()).IsOpen);
     }
 
     [Fact]
@@ -186,8 +209,8 @@ public sealed class FormDraftingChatTests
     }
 
     [Fact]
-    [DisplayName("Questions asked in a turn that then fails are not offered, and the failure is reported")]
-    public async Task StartAsync_TurnFailsAfterQuestions_ShowsNoQuestionCard()
+    [DisplayName("Questions asked in a turn that then fails stay shown but take no answers, and the failure is reported")]
+    public async Task StartAsync_TurnFailsAfterQuestions_LeavesTheQuestionCardClosed()
     {
         var client = new ScriptedChatClient()
             .Then(Call("1", "ask_user", OneQuestion))
@@ -197,7 +220,7 @@ public sealed class FormDraftingChatTests
         await viewModel.StartAsync([Text("a scanned leave request")]);
 
         var entries = viewModel.Conversation.Entries;
-        Assert.DoesNotContain(entries, entry => entry is DraftQuestionCard);
+        Assert.False(Assert.Single(entries.OfType<DraftQuestionCard>()).IsOpen);
         Assert.Contains("network down", Assert.Single(entries.OfType<ErrorEntry>()).Message, StringComparison.Ordinal);
         Assert.Equal(TurnOutcome.Failed, Assert.IsType<TurnSummaryEntry>(entries[^1]).Outcome);
         Assert.Equal(ToolCallStatus.Completed, Assert.Single(entries.OfType<ToolCallEntry>()).Status);

@@ -64,7 +64,7 @@
     <PackageReference Include="Polhem.Markdown.Avalonia" Version="[0.2.1]" />
     <!-- The conversation of the drafting window and of the rule assistant (polhem-dev/polhem-chat). The drafting sessions
          run their own tool loops and feed the conversation; the control only shows it. An exact version, as above. -->
-    <PackageReference Include="Polhem.Chat.Avalonia" Version="[0.1.2]" />
+    <PackageReference Include="Polhem.Chat.Avalonia" Version="[0.2.0]" />
   </ItemGroup>
 
   <ItemGroup>
