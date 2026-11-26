@@ -19,6 +19,15 @@
 		<integer>1</integer>
 		<integer>2</integer>
 	</array>
+	<!-- The iOS 27 SDK requires the UIKit scene lifecycle (MT7199 at build time, a crash at launch on iOS 27).
+	     `AvaloniaAppDelegate` supplies the scene configuration in code, with `AvaloniaSceneDelegate`, so the
+	     manifest declares no `UISceneConfigurations`: a named configuration makes that delegate treat the scene
+	     as someone else's and create no window. -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
