@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using Avalonia.Controls;
 using Polhem.Chat;
 using Polhem.Chat.Avalonia;
@@ -10,38 +9,26 @@ namespace Polhem.DefineEditor.Views;
 /// <summary>The AI assistant that writes a rule from plain words and explains one, with the samples the engine computed.</summary>
 public partial class RuleAssistantPanel : UserControl
 {
-    private RuleAssistantViewModel? _assistant;
-
     public RuleAssistantPanel()
     {
         InitializeComponent();
         ChatLanguage.Follow(Chat, "RuleAssistant_RequestWatermark");
+    }
 
-        // IMPORTANT: the explanation is the model's text. An image in it would be fetched as soon as it shows, and a
-        // prompt injection can put data in the image's address, so the viewer loads none. The conversation's
-        // `ChatView` does the same by default.
+    /// <summary>The options of the explanation viewer in a <see cref="RuleProposalEntry"/> card, which load no images.</summary>
+    /// <remarks>
+    /// IMPORTANT: the explanation is the model's text. An image in it would be fetched as soon as it shows, and a prompt
+    /// injection can put data in the image's address, so the viewer loads none. The conversation's `ChatView` does the
+    /// same by default. Every card shares this instance, so nothing may change it after it is created.
+    /// </remarks>
+    public static MarkdownOptions ExplanationOptions { get; } = CreateExplanationOptions();
+
+    private static MarkdownOptions CreateExplanationOptions()
+    {
         var options = new MarkdownOptions();
         options.AllowedImageSchemes.Clear();
-        ExplanationViewer.Options = options;
+        return options;
     }
-
-    protected override void OnDataContextChanged(EventArgs e)
-    {
-        base.OnDataContextChanged(e);
-        if (_assistant is not null) _assistant.PropertyChanged -= OnAssistantPropertyChanged;
-        _assistant = DataContext as RuleAssistantViewModel;
-        if (_assistant is not null) _assistant.PropertyChanged += OnAssistantPropertyChanged;
-        ShareHeight();
-    }
-
-    private void OnAssistantPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(RuleAssistantViewModel.HasResult)) ShareHeight();
-    }
-
-    // The result row takes no height until there is a result; then the conversation and the result share the panel.
-    private void ShareHeight()
-        => Rows.RowDefinitions[2].Height = _assistant?.HasResult == true ? new GridLength(1.2, GridUnitType.Star) : GridLength.Auto;
 
     private void OnPromptSubmitted(object? sender, PromptSubmittedEventArgs e)
     {

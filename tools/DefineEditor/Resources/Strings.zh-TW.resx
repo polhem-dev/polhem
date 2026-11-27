@@ -603,6 +603,7 @@
   <data name="RuleAssistant_TranslationsHint" xml:space="preserve"><value>按確定時，這些翻譯會寫入表單的語系檔。</value></data>
   <data name="RuleAssistant_Apply" xml:space="preserve"><value>填入規則</value></data>
   <data name="RuleAssistant_ApplyTip" xml:space="preserve"><value>以草稿填入對話框的資料表、When、Condition 與訊息；按確定才會儲存。</value></data>
+  <data name="RuleAssistant_Superseded" xml:space="preserve"><value>後面有較新的版本，請套用那一版。</value></data>
   <data name="RuleAssistant_FileDirty" xml:space="preserve"><value>{0} 有未儲存的變更，沒有寫入。</value></data>
   <data name="RuleAssistant_FileFailed" xml:space="preserve"><value>{0} 無法寫入：{1}</value></data>
   <data name="Status_RuleMessagesWritten" xml:space="preserve"><value>規則 {0}：翻譯已寫入 {1}。</value></data>

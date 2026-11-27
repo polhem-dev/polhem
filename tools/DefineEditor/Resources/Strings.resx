@@ -616,6 +616,7 @@ The draft is as it was before this message; send it again to retry.</value></dat
   <data name="RuleAssistant_TranslationsHint" xml:space="preserve"><value>When you confirm the dialog, these translations are written into the form's Language files.</value></data>
   <data name="RuleAssistant_Apply" xml:space="preserve"><value>Use This Rule</value></data>
   <data name="RuleAssistant_ApplyTip" xml:space="preserve"><value>Fills the dialog with the draft's table, When, Condition and message. Nothing is saved until you confirm the dialog.</value></data>
+  <data name="RuleAssistant_Superseded" xml:space="preserve"><value>A newer version of the rule follows; apply that one.</value></data>
   <data name="RuleAssistant_FileDirty" xml:space="preserve"><value>{0} has unsaved changes and was not written.</value></data>
   <data name="RuleAssistant_FileFailed" xml:space="preserve"><value>{0} could not be written: {1}</value></data>
   <data name="Status_RuleMessagesWritten" xml:space="preserve"><value>Rule {0}: translations written to {1}.</value></data>

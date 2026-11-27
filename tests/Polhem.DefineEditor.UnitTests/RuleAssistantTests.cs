@@ -214,6 +214,96 @@ public sealed class RuleAssistantTests : IDisposable
     }
 
     [Fact]
+    [DisplayName("A draft shows as a card in the conversation, after the reply and before the turn summary")]
+    public async Task Draft_ShowsCardAfterReply()
+    {
+        var client = new ScriptedChatClient().Then(Text("我來寫這條規則。"), Call("c1", "submit_rule", Draft));
+        var (_, assistant) = Open(Load(client));
+
+        await assistant.SendAsync("金額超過 10 萬要有核准人");
+
+        var entries = assistant.Conversation.Entries;
+        var card = Assert.Single(entries.OfType<RuleProposalEntry>());
+        Assert.Equal(entries.Count - 2, entries.IndexOf(card));
+        Assert.IsType<TurnSummaryEntry>(entries[^1]);
+        Assert.True(entries.IndexOf(Assert.Single(entries.OfType<AssistantReplyEntry>())) < entries.IndexOf(card));
+        Assert.Equal("金額超過 10 萬的訂單必須填核准人。", card.Explanation);
+        Assert.Contains("When: amount > 100000", card.RuleText, StringComparison.Ordinal);
+        Assert.Equal([RuleSampleOutcome.Blocked, RuleSampleOutcome.Passes, RuleSampleOutcome.Skipped],
+            card.Samples.Select(s => s.Outcome));
+        Assert.True(card.CanApplyHere);
+    }
+
+    [Fact]
+    [DisplayName("A revision adds a new card, and the earlier one keeps what it showed but no longer applies")]
+    public async Task Revise_SupersedesEarlierCard()
+    {
+        var client = new ScriptedChatClient()
+            .Then(Call("c1", "submit_rule", Draft))
+            .Then(Call("c2", "submit_rule", Draft.Replace("amount > 100000", "amount > 50000", StringComparison.Ordinal)));
+        var (_, assistant) = Open(Load(client));
+
+        await assistant.SendAsync("金額超過 10 萬要有核准人");
+        await assistant.SendAsync("改成 5 萬");
+
+        var cards = assistant.Conversation.Entries.OfType<RuleProposalEntry>().ToList();
+        Assert.Equal(2, cards.Count);
+        Assert.False(cards[0].IsCurrent);
+        Assert.False(cards[0].CanApplyHere);
+        Assert.Contains("When: amount > 100000", cards[0].RuleText, StringComparison.Ordinal);
+        Assert.True(cards[1].CanApplyHere);
+        Assert.Contains("When: amount > 50000", cards[1].RuleText, StringComparison.Ordinal);
+        Assert.Contains("When: amount > 50000", assistant.RuleText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [DisplayName("An explanation shows as a card that is not a draft and offers nothing to apply")]
+    public async Task Explain_ShowsCardThatIsNotADraft()
+    {
+        var client = new ScriptedChatClient().Then(Call("c1", "submit_explanation", Explanation));
+        var (dialog, assistant) = Open(Load(client));
+
+        dialog.Condition.Expression = "!IsBlank(approver_id)";
+        await assistant.ExplainCommand.ExecuteAsync(null);
+
+        var card = Assert.Single(assistant.Conversation.Entries.OfType<RuleProposalEntry>());
+        Assert.False(card.IsDraft);
+        Assert.False(card.CanApplyHere);
+        Assert.Equal(2, card.Samples.Count);
+    }
+
+    [Fact]
+    [DisplayName("A card shows a right-to-left override in the explanation as an escape")]
+    public async Task Draft_CardEscapesBidiControls()
+    {
+        var client = new ScriptedChatClient()
+            .Then(Call("c1", "submit_rule", Draft.Replace("金額超過 10 萬的訂單", "report‮fdp.exe", StringComparison.Ordinal)))
+            .Then(Text("好了。"));
+        var (_, assistant) = Open(Load(client));
+
+        await assistant.SendAsync("金額超過 10 萬要有核准人");
+
+        var card = Assert.Single(assistant.Conversation.Entries.OfType<RuleProposalEntry>());
+        Assert.DoesNotContain("‮", card.Explanation, StringComparison.Ordinal);
+        Assert.Contains(VisibleText.EscapeBidiControls("‮"), card.Explanation, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [DisplayName("A new conversation drops the draft, so nothing is left to apply")]
+    public async Task NewConversation_DropsDraft()
+    {
+        var client = new ScriptedChatClient().Then(Call("c1", "submit_rule", Draft)).Then(Text("好了。"));
+        var (_, assistant) = Open(Load(client));
+
+        await assistant.SendAsync("金額超過 10 萬要有核准人");
+        assistant.NewConversationCommand.Execute(null);
+
+        Assert.False(assistant.HasDraft);
+        Assert.False(assistant.ApplyCommand.CanExecute(null));
+        Assert.Empty(assistant.Samples);
+    }
+
+    [Fact]
     [DisplayName("The streamed reasoning and reply show in the conversation, and an accepted rule shows its result as well")]
     public async Task Draft_Streamed_ShowsReasoningAndReplyThenTheResult()
     {
