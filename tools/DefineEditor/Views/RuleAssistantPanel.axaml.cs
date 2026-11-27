@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Polhem.Chat;
 using Polhem.Chat.Avalonia;
 using Polhem.DefineEditor.ViewModels;
 using Polhem.Markdown;
