@@ -45,32 +45,38 @@
                 <TextBox Text="{Binding Message, Mode=TwoWay}" AutomationProperties.Name="{loc:Loc ExpressionEditor_Message}"/>
             </StackPanel>
 
-            <Expander DockPanel.Dock="Bottom" Margin="0,10,0,0" HorizontalAlignment="Stretch"
-                      Header="{loc:Loc RuleDialog_Trial}">
-                <views:ExpressionTrialPanel DataContext="{Binding Trial}"/>
-            </Expander>
+            <!-- The expressions and the trial on the left, the names and the assistant on the right. The trial stays in the
+                 left column, so expanding it never takes height from the assistant's conversation; the splitter lets the
+                 user give the conversation more width. -->
+            <Grid ColumnDefinitions="*,10,470">
+                <Grid Grid.Column="0" RowDefinitions="Auto,2*,Auto,3*,Auto" MinWidth="300">
+                    <TextBlock Grid.Row="0" Margin="0,0,0,4" TextWrapping="Wrap">
+                        <Run Text="When" FontWeight="SemiBold"/>
+                        <Run Text="{loc:Loc RuleDialog_WhenHint}" Classes="muted"/>
+                    </TextBlock>
+                    <views:ExpressionBox x:Name="WhenBox" Grid.Row="1" DataContext="{Binding When}"/>
+                    <TextBlock Grid.Row="2" Margin="0,10,0,4" TextWrapping="Wrap">
+                        <Run Text="Condition" FontWeight="SemiBold"/>
+                        <Run Text="{loc:Loc RuleDialog_ConditionHint}" Classes="muted"/>
+                    </TextBlock>
+                    <views:ExpressionBox x:Name="ConditionBox" Grid.Row="3" DataContext="{Binding Condition}"/>
+                    <Expander Grid.Row="4" Margin="0,10,0,0" HorizontalAlignment="Stretch"
+                              Header="{loc:Loc RuleDialog_Trial}">
+                        <views:ExpressionTrialPanel DataContext="{Binding Trial}"/>
+                    </Expander>
+                </Grid>
 
-            <TabControl DockPanel.Dock="Right" Width="470" Margin="10,0,0,0" Padding="0,6,0,0">
-                <TabItem Header="{loc:Loc ExpressionEditor_SymbolsTab}">
-                    <views:ExpressionSymbolTree x:Name="Symbols" Groups="{Binding Symbols.Groups}"/>
-                </TabItem>
-                <TabItem Header="{loc:Loc RuleAssistant_Tab}"
-                         IsVisible="{Binding Assistant, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <views:RuleAssistantPanel DataContext="{Binding Assistant}"/>
-                </TabItem>
-            </TabControl>
+                <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="Transparent"/>
 
-            <Grid RowDefinitions="Auto,2*,Auto,3*">
-                <TextBlock Grid.Row="0" Margin="0,0,0,4" TextWrapping="Wrap">
-                    <Run Text="When" FontWeight="SemiBold"/>
-                    <Run Text="{loc:Loc RuleDialog_WhenHint}" Classes="muted"/>
-                </TextBlock>
-                <views:ExpressionBox x:Name="WhenBox" Grid.Row="1" DataContext="{Binding When}"/>
-                <TextBlock Grid.Row="2" Margin="0,10,0,4" TextWrapping="Wrap">
-                    <Run Text="Condition" FontWeight="SemiBold"/>
-                    <Run Text="{loc:Loc RuleDialog_ConditionHint}" Classes="muted"/>
-                </TextBlock>
-                <views:ExpressionBox x:Name="ConditionBox" Grid.Row="3" DataContext="{Binding Condition}"/>
+                <TabControl Grid.Column="2" MinWidth="320" Padding="0,6,0,0">
+                    <TabItem Header="{loc:Loc ExpressionEditor_SymbolsTab}">
+                        <views:ExpressionSymbolTree x:Name="Symbols" Groups="{Binding Symbols.Groups}"/>
+                    </TabItem>
+                    <TabItem Header="{loc:Loc RuleAssistant_Tab}"
+                             IsVisible="{Binding Assistant, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <views:RuleAssistantPanel DataContext="{Binding Assistant}"/>
+                    </TabItem>
+                </TabControl>
             </Grid>
         </DockPanel>
     </Border>

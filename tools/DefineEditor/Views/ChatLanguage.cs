@@ -1,5 +1,6 @@
 using System.Globalization;
 using Avalonia;
+using Polhem.Chat;
 using Polhem.Chat.Avalonia;
 using Polhem.DefineEditor.Services;
 
@@ -30,9 +31,9 @@ internal static class ChatLanguage
     }
 
     /// <summary>The view's texts in a culture, with the placeholder of <paramref name="placeholderKey"/>.</summary>
-    public static ChatViewStrings Create(CultureInfo culture, string? placeholderKey)
+    public static ChatStrings Create(CultureInfo culture, string? placeholderKey)
     {
-        var strings = ChatViewStrings.ForCulture(culture);
+        var strings = ChatStrings.ForCulture(culture);
         if (placeholderKey is not null)
             strings.PromptPlaceholder = LocalizationService.Current[placeholderKey];
         return strings;

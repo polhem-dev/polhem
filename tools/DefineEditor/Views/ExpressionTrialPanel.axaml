@@ -12,12 +12,13 @@
             <ItemsControl ItemsSource="{Binding Inputs}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:ExpressionTrialInput">
-                        <Grid ColumnDefinitions="160,80,*" Margin="0,2">
+                        <!-- The field's type is the box's placeholder, so it takes no column of its own. -->
+                        <Grid ColumnDefinitions="160,*" Margin="0,2">
                             <TextBlock Grid.Column="0" Text="{Binding FieldName}" VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis"/>
-                            <TextBlock Grid.Column="1" Text="{Binding TypeName}" Classes="muted" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="2">
-                                <TextBox Text="{Binding Text, Mode=TwoWay}" AutomationProperties.Name="{Binding FieldName}"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBox Text="{Binding Text, Mode=TwoWay}" PlaceholderText="{Binding TypeName}"
+                                         AutomationProperties.Name="{Binding FieldName}"/>
                                 <TextBlock Text="{Binding Error}" IsVisible="{Binding HasError}" FontSize="11"
                                            TextWrapping="Wrap" Foreground="{DynamicResource SemiColorDanger}"/>
                             </StackPanel>

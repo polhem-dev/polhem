@@ -19,7 +19,8 @@ namespace Polhem.DefineEditor.ViewModels;
 /// </summary>
 /// <remarks>
 /// The conversation shows in a chat view: the first prompt asks for a rule, the next ones revise it, until the user starts
-/// a new conversation. Nothing is sent before the user asks: the chat client is created on the first request. The draft replaces the whole
+/// a new conversation. Each drafted or explained rule is a <see cref="RuleProposalEntry"/> in the conversation, after the
+/// reply of its turn; the newest card of a draft is the one the user applies. Nothing is sent before the user asks: the chat client is created on the first request. The draft replaces the whole
 /// rule (its table, When, Condition and message) when the user applies it, and keeps the rule's id, the key its
 /// translations are stored under.
 /// </remarks>
@@ -38,6 +39,7 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     private bool _hasConversation;
     private bool _replyStreamed;
     private RuleDraftingUsage _reportedUsage = RuleDraftingUsage.None;
+    private RuleProposalEntry? _proposal;
 
     /// <param name="schema">The form; it is read, never changed.</param>
     /// <param name="ruleId">The rule being edited. The model drafts against the form without it, so its id is free.</param>
@@ -121,11 +123,6 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     /// <summary>Whether there is a drafted rule to apply.</summary>
     public bool HasDraft => Draft is not null;
 
-    /// <summary>Whether there is an explanation or a draft to show.</summary>
-    public bool HasResult => Explanation.Length > 0;
-
-    partial void OnExplanationChanged(string value) => OnPropertyChanged(nameof(HasResult));
-
     /// <summary>The samples of the drafted or explained rule, with what the engine computed for each.</summary>
     public ObservableCollection<RuleAssistantSample> Samples { get; } = [];
 
@@ -173,7 +170,13 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     private void NewConversation()
     {
         _hasConversation = false;
+        _proposal = null;
         Conversation.Clear();
+        Draft = null;
+        Explanation = string.Empty;
+        RuleText = string.Empty;
+        Message = string.Empty;
+        Samples.Clear();
     }
 
     private bool CanStartOver() => !IsBusy;
@@ -183,13 +186,14 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
     private Task ExplainAsync() => RunAsync(L("RuleAssistant_ExplainPrompt"), async (drafting, token) =>
     {
         var result = await drafting.ExplainAsync(_currentRule(), token);
-        ShowReply(result.Explanation is not null, result.Reply);
+        RuleProposalEntry? card = null;
         if (result.Explanation is { } explanation)
         {
             Draft = null;
             RuleText = string.Empty;
-            ShowResult(explanation.Explanation, explanation.Samples);
+            card = ShowResult(explanation.Explanation, explanation.Samples);
         }
+        ShowReply(card, result.Reply);
     });
 
     /// <summary>Stops the request in progress.</summary>
@@ -214,31 +218,43 @@ public sealed partial class RuleAssistantViewModel : ViewModelBase, IDisposable
 
     private void ShowDraft(RuleDraftResult result)
     {
-        ShowReply(result.Draft is not null, result.Reply);
-        if (result.Draft is not { } draft) return;
-        Draft = draft;
-        Message = draft.Message;
-        RuleText = DescribeRule(draft);
-        foreach (var translation in Translations)
-            translation.Text = draft.MessageTranslations.GetValueOrDefault(translation.Language, string.Empty);
-        ShowResult(draft.Explanation, draft.Samples);
+        RuleProposalEntry? card = null;
+        if (result.Draft is { } draft)
+        {
+            Draft = draft;
+            Message = draft.Message;
+            RuleText = DescribeRule(draft);
+            foreach (var translation in Translations)
+                translation.Text = draft.MessageTranslations.GetValueOrDefault(translation.Language, string.Empty);
+            card = ShowResult(draft.Explanation, draft.Samples);
+        }
+        ShowReply(card, result.Reply);
     }
 
-    // A reply the model wrote shows as it streamed in. A provider that streams nothing has it only in the result. Without
-    // an accepted result and without a reply, the conversation says the assistant did not finish.
-    private void ShowReply(bool accepted, string reply)
+    // A reply the model wrote shows as it streamed in. A provider that streams nothing has it only in the result. The
+    // accepted result follows the reply as a card; without one and without a reply, the conversation says the assistant
+    // did not finish.
+    private void ShowReply(RuleProposalEntry? card, string reply)
     {
         if (!_replyStreamed && reply.Length > 0)
             _feed.AppendReply(reply);
-        _feed.Complete(accepted || reply.Length > 0 ? [] : [new ErrorEntry(L("RuleAssistant_NoResult"))]);
+        if (card is not null)
+            _feed.Complete(card);
+        else
+            _feed.Complete(reply.Length > 0 ? [] : [new ErrorEntry(L("RuleAssistant_NoResult"))]);
     }
 
-    private void ShowResult(string explanation, IReadOnlyList<RuleDraftSample> samples)
+    // The newest result replaces the one before it: the older card stays in the conversation to read, and only the new
+    // one applies.
+    private RuleProposalEntry ShowResult(string explanation, IReadOnlyList<RuleDraftSample> samples)
     {
         Explanation = explanation;
         Samples.Clear();
         foreach (var sample in samples)
             Samples.Add(new RuleAssistantSample(sample.Description, DescribeValues(sample), sample.Outcome, OutcomeText(sample.Outcome)));
+        _proposal?.Supersede();
+        _proposal = new RuleProposalEntry(this, explanation, RuleText, Samples.ToList());
+        return _proposal;
     }
 
     private async Task RunAsync(string prompt, Func<RuleDrafting, CancellationToken, Task> request)
